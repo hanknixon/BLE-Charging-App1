@@ -13,7 +13,6 @@ import '../main.dart';
 import '../ble.dart';
 import '../blemessages.dart';
 
-// ignore: must_be_immutable
 class SessionV extends StatefulWidget {
   SessionV({
     Key? key,
@@ -29,7 +28,7 @@ class SessionV extends StatefulWidget {
   final String dateTime;
   final String settingChoice;
   final double selectedValue;
-  late BluetoothCharacteristic characteristic;
+  BluetoothCharacteristic? characteristic;
   int duration = 1000;
   double animatePercent = 0;
   var prevTime = 0;
@@ -40,22 +39,7 @@ class SessionV extends StatefulWidget {
 
   bool isCharging = false;
 
-  /// Setter function to calculate and set the current charge of the session based on current charge and time elasped from previous update
-  ///
-  /// @param {ChargeSettings} chargeState - current state of the session with variables for current charge amount and if session is ongoing
   void setCurrentCharge(ChargeSettings chargeState) {
-    // var currTime = chargeState.stopwatch.elapsedMilliseconds;
-    // var charge = (chargeState.currentCharge +
-    //     ((currTime - prevTime) / 3.6e+6 * chargeState.chargeSpeed)
-    //         );
-    // prevTime = chargeState.stopwatch.elapsedMilliseconds;
-    // if (chargeState.chargeSessionStarted == true) {
-    //   if (charge >= chargeState.maxCapacity) {
-    //     chargeState.currentCharge = chargeState.maxCapacity;
-    //   } else {
-    //     chargeState.currentCharge = charge;
-    //   }
-    // }
     var charge = currentMeterValue + chargeState.startingCharge;
     if (chargeState.chargeSessionStarted == true) {
       if (charge >= chargeState.maxCapacity) {
@@ -70,23 +54,12 @@ class SessionV extends StatefulWidget {
   State<SessionV> createState() => _SessionVState();
 }
 
-class _SessionVState extends State<SessionV>
-    with SingleTickerProviderStateMixin {
+class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  // ignore: unused_field
   late Animation _animation;
 
-  /// Function to create a timer and controller for the animation of the pulsing battery to show total charge percentage
   @override
   void initState() {
-    // timeSyncMessage(widget.services, widget.currTime);
-    // Timer.periodic(const Duration(seconds: 5), (timer) async {
-    //   timerObj = timer;
-    //   timeSyncMessage(widget.services, widget.currTime);
-    //   if (widget.stopTimer == true) {
-    //     timer.cancel();
-    //   }
-    // });
     _animationController =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
     _animationController.repeat(reverse: true);
@@ -97,15 +70,13 @@ class _SessionVState extends State<SessionV>
     super.initState();
   }
 
-  /// Function to delete the animination timer/controller
   @override
   dispose() {
-    _animationController.dispose(); // you need this
+    _animationController.dispose();
     super.dispose();
   }
 
-  Future waitWhile(bool Function() test,
-      [Duration pollInterval = Duration.zero]) {
+  Future waitWhile(bool Function() test, [Duration pollInterval = Duration.zero]) {
     var completer = Completer();
     check() {
       if (test()) {
@@ -114,7 +85,6 @@ class _SessionVState extends State<SessionV>
         Timer(pollInterval, check);
       }
     }
-
     check();
     return completer.future;
   }
@@ -122,7 +92,6 @@ class _SessionVState extends State<SessionV>
   @override
   Widget build(BuildContext context) {
     var chargeState = context.watch<ChargeSettings>();
-    //final scanSettings = context.watch<ScanSettings>();
 
     BuildContext? dcontext;
     chargeState.device = widget.device;
@@ -133,7 +102,7 @@ class _SessionVState extends State<SessionV>
     Future<void> showNeedToTapAgain(String dispalyText) async {
       return showDialog<void>(
         context: context,
-        barrierDismissible: false, // user must tap button!
+        barrierDismissible: false,
         builder: (BuildContext context) {
           dcontext = context;
           return AlertDialog(
@@ -157,13 +126,15 @@ class _SessionVState extends State<SessionV>
         setState(() {
           chargeState.intendedBLEDisconnect = true;
         });
-        try {
-          await writeEndoFChargingMessage(widget.characteristic);
-          await widget.device.disconnect();
-          debugPrint(
-              "\n <<<<<<<<******>>>>>>>> DISCONNECTING CHARGE DONE <<<<<<<<******>>>>>>>> \n");
-        } on Exception catch (e) {
-          debugPrint("\nNotify Error $e\n");
+        if (widget.characteristic != null) {
+          try {
+            await writeEndoFChargingMessage(widget.characteristic!);
+            await widget.device.disconnect();
+            debugPrint(
+                "\n <<<<<<<<******>>>>>>>> DISCONNECTING CHARGE DONE <<<<<<<<******>>>>>>>> \n");
+          } on Exception catch (e) {
+            debugPrint("\nNotify Error $e\n");
+          }
         }
       }
     }
@@ -181,8 +152,7 @@ class _SessionVState extends State<SessionV>
       if (remainingMilliseconds < 0) {
         remainingMilliseconds = 0;
       }
-      Duration remainingDuration =
-          Duration(milliseconds: remainingMilliseconds);
+      Duration remainingDuration = Duration(milliseconds: remainingMilliseconds);
       return formatDuration(remainingDuration);
     }
 
@@ -280,8 +250,7 @@ class _SessionVState extends State<SessionV>
                           height: 65,
                           child: Padding(
                             padding: EdgeInsets.only(
-                                right:
-                                    MCUI.adjustedWidthWithCotext(0, context)),
+                                right: MCUI.adjustedWidthWithCotext(0, context)),
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: ClipRect(
@@ -299,54 +268,6 @@ class _SessionVState extends State<SessionV>
                             ),
                           ),
                         ),
-                        // Padding(
-                        //   padding: EdgeInsets.only(
-                        //       right: MCUI.adjustedWidthWithCotext(3, context)),
-                        //   child: Transform.flip(
-                        //     flipX: false,
-                        //     child: SizedBox(
-                        //       height: 64,
-                        //       width: 140,
-                        //       child: LinearPercentIndicator(
-                        //         // width: 145.0,
-                        //         lineHeight: 55,
-                        //         percent: chargeState.currentCharge /
-                        //             chargeState.maxCapacity,
-                        //         barRadius: Radius.elliptical(8, 32),
-                        //         // backgroundColor: Colors.transparent,
-                        //         backgroundColor: Color(0xFFE9FBF3),
-                        //         // progressColor: Colors.transparent,
-                        //         progressColor: Color(0xFF00AB56),
-                        //         // animation: false,
-                        //         // animationDuration: widget.duration,
-                        //         // animateFromLastPercent: true,
-                        //         // onAnimationEnd: () {
-                        //         //   currentlyCharging
-                        //         //       ? setState(() {
-                        //         //           if (widget.animatePercent == 0) {
-                        //         //             widget.animatePercent =
-                        //         //                 chargeState.currentCharge /
-                        //         //                     chargeState.maxCapacity *
-                        //         //                     100.0;
-                        //         //             widget.duration = 2000;
-                        //         //           } else {
-                        //         //             widget.animatePercent = 0;
-                        //         //             widget.duration = 10;
-                        //         //           }
-                        //         //         })
-                        //         //       : widget.animatePercent =
-                        //         //           chargeState.currentCharge;
-                        //         // },
-                        //         // barRadius: Radius.circular(10),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
-                        // SizedBox(
-                        //     width: 138,
-                        //     height: 66,
-                        //     child: Image.asset(
-                        //         'assets/images/battery_filter.png')),
                         SizedBox(
                             width: 150,
                             height: 35,
@@ -461,32 +382,38 @@ class _SessionVState extends State<SessionV>
                         setState(() {
                           chargeState.intendedBLEDisconnect = true;
                         });
-                        try {
-                          await writeEndoFChargingMessage(
-                              widget.characteristic);
-                        } on Exception catch (e) {
-                          debugPrint("\nNotify Error $e\n");
-                        }
-
-                        await waitWhile(() => responseEndoFChargingRecieved)
-                            .timeout(const Duration(seconds: 10),
-                                onTimeout: () {
-                          showNeedToTapAgain(
-                              "Failed to Stop Charge, Please Retry");
-                        });
-
-                        if (responseEndoFChargingRecieved == true) {
+                        if (widget.characteristic != null) {
                           try {
-                            await widget.device.disconnect();
+                            await writeEndoFChargingMessage(
+                                widget.characteristic!);
                           } on Exception catch (e) {
                             debugPrint("\nNotify Error $e\n");
                           }
+
+                          await waitWhile(() => responseEndoFChargingRecieved)
+                              .timeout(const Duration(seconds: 10),
+                                  onTimeout: () {
+                            showNeedToTapAgain(
+                                "Failed to Stop Charge, Please Retry");
+                          });
+
+                          if (responseEndoFChargingRecieved == true) {
+                            try {
+                              await widget.device.disconnect();
+                            } on Exception catch (e) {
+                              debugPrint("\nNotify Error $e\n");
+                            }
+                            widget.stopTimer = true;
+                            endHeartbeat = true;
+                            chargeState.endSession();
+
+                            debugPrint(
+                                "\n ************* responseEndoFChargingRecieved ************* \n");
+                          }
+                        } else {
                           widget.stopTimer = true;
                           endHeartbeat = true;
                           chargeState.endSession();
-
-                          debugPrint(
-                              "\n ************* responseEndoFChargingRecieved ************* \n");
                         }
                       }
                     },
@@ -501,16 +428,17 @@ class _SessionVState extends State<SessionV>
       );
     }
 
-    // ignore: prefer_typing_uninitialized_variables
-    var s, c;
-    for (s in widget.services) {
-      for (c in s.characteristics) {
-        if (c.uuid == characteristicsUUID) {
-          break;
+    if (widget.services.isNotEmpty) {
+      for (var s in widget.services) {
+        for (var c in s.characteristics) {
+          if (c.uuid == characteristicsUUID) {
+            widget.characteristic = c;
+            break;
+          }
         }
+        if (widget.characteristic != null) break;
       }
     }
-    widget.characteristic = c;
 
     if (chargeState.stopwatch.elapsedMilliseconds == 0 &&
         chargeState.stopwatch.isRunning == false &&
@@ -542,7 +470,6 @@ class _SessionVState extends State<SessionV>
             Navigator.pop(dcontext!);
             dcontext = null;
           }
-          // timerObj!.cancel();
           widget.stopTimer = true;
 
           return chargingPage(context, chargeState, false);
@@ -570,7 +497,6 @@ class _SessionVState extends State<SessionV>
             Navigator.pop(dcontext!);
             dcontext = null;
           }
-          // timerObj!.cancel();
           widget.stopTimer = true;
 
           return chargingPage(context, chargeState, false);
@@ -597,7 +523,6 @@ class _SessionVState extends State<SessionV>
             Navigator.pop(dcontext!);
             dcontext = null;
           }
-          // timerObj!.cancel();
           widget.stopTimer = true;
 
           return chargingPage(context, chargeState, false);
