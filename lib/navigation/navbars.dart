@@ -103,7 +103,7 @@ class TopNavBar extends StatelessWidget {
 }
 
 class BottomNavBar extends StatelessWidget {
-  Widget _buildNavItem(BuildContext context, String label, String iconPath, Color color, VoidCallback onTap) {
+  Widget _buildNavItem(BuildContext context, String label, String iconPath, VoidCallback onTap, bool isSelected) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -113,7 +113,10 @@ class BottomNavBar extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           padding: EdgeInsets.all(0),
           onPressed: onTap,
-          icon: SvgPicture.asset(iconPath),
+          icon: SvgPicture.asset(
+            iconPath,
+            color: isSelected ? MCColors.green : MCColors.grey,
+          ),
         ),
         Container(
           height: 20,
@@ -121,7 +124,7 @@ class BottomNavBar extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: color,
+              color: isSelected ? MCColors.green : MCColors.grey,
               fontSize: 12
             )
           )
@@ -132,6 +135,10 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
+    final isAccountPage = context.widget is AccountV;
+    final isChargePage = currentRoute == '/charge';
+
     return Container(
         height: MCUI.adjustedHeightWithCotext(100, context),
         decoration: BoxDecoration(
@@ -151,15 +158,53 @@ class BottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(context, 'Map', 'assets/images/tab_map.svg', MCColors.grey, () {}),
-              _buildNavItem(context, 'Charge', 'assets/images/tab_charge.svg', MCColors.green, () {}),
-              _buildNavItem(context, 'Community', 'assets/images/tab_community.svg', MCColors.grey, () {}),
-              _buildNavItem(context, 'Account', 'assets/images/tab_account.svg', MCColors.grey, () {
-                NavigatorMain.navStack.push(NavStackRecord(this, context));
-                Navigator.of(context).push(
-                  MCUI.getSlideAnimationRouteBuilder(AccountV()),
-                );
-              }),
+              _buildNavItem(
+                context, 
+                'Map', 
+                'assets/images/tab_map.svg',
+                () {
+                  if (isAccountPage) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                false
+              ),
+              _buildNavItem(
+                context, 
+                'Charge', 
+                'assets/images/tab_charge.svg',
+                () {
+                  if (isAccountPage) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                !isAccountPage && !isChargePage
+              ),
+              _buildNavItem(
+                context, 
+                'Community', 
+                'assets/images/tab_community.svg',
+                () {
+                  if (isAccountPage) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                false
+              ),
+              _buildNavItem(
+                context, 
+                'Account', 
+                'assets/images/tab_account.svg',
+                () {
+                  if (!isAccountPage) {
+                    NavigatorMain.navStack.push(NavStackRecord(this, context));
+                    Navigator.of(context).push(
+                      MCUI.getSlideAnimationRouteBuilder(AccountV()),
+                    );
+                  }
+                },
+                isAccountPage
+              ),
             ],
           ),
         ));
