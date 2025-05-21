@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'navigation.dart';
 import '../utils/ui.dart';
 import '../utils/colors.dart';
-
+import '../screen_views/account_v.dart';
 
 class TopNavBar extends StatelessWidget {
   static Widget? poppingWidget;
@@ -103,8 +102,34 @@ class TopNavBar extends StatelessWidget {
   }
 }
 
-
 class BottomNavBar extends StatelessWidget {
+  Widget _buildNavItem(BuildContext context, String label, String iconPath, Color color, VoidCallback onTap) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        IconButton(
+          enableFeedback: false,
+          iconSize: 32,
+          alignment: Alignment.bottomCenter,
+          padding: EdgeInsets.all(0),
+          onPressed: onTap,
+          icon: SvgPicture.asset(iconPath),
+        ),
+        Container(
+          height: 20,
+          alignment: Alignment.topCenter,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12
+            )
+          )
+        )
+      ]
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -126,69 +151,17 @@ class BottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-                IconButton(
-                  enableFeedback: false,
-                  iconSize: 32,
-                  alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {},
-                  icon: SvgPicture.asset('assets/images/tab_map.svg'),
-                ),
-                Container(
-                    height: 20,
-                    alignment: Alignment.topCenter,
-                    child: Text("Map",
-                        style: TextStyle(color: MCColors.grey, fontSize: 12)))
-              ]),
-              Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-                IconButton(
-                  enableFeedback: false,
-                  iconSize: 32,
-                  alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {},
-                  icon: SvgPicture.asset('assets/images/tab_charge.svg'),
-                ),
-                Container(
-                    height: 20,
-                    alignment: Alignment.topCenter,
-                    child: Text("Charge",
-                        style: TextStyle(color: MCColors.green, fontSize: 12)))
-              ]),
-              Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-                IconButton(
-                  enableFeedback: false,
-                  iconSize: 32,
-                  alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {},
-                  icon: SvgPicture.asset('assets/images/tab_community.svg'),
-                ),
-                Container(
-                    height: 20,
-                    alignment: Alignment.topCenter,
-                    child: Text("Community",
-                        style: TextStyle(color: MCColors.grey, fontSize: 12)))
-              ]),
-              Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-                IconButton(
-                  enableFeedback: false,
-                  iconSize: 32,
-                  alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {},
-                  icon: SvgPicture.asset('assets/images/tab_account.svg'),
-                ),
-                Container(
-                    height: 20,
-                    alignment: Alignment.topCenter,
-                    child: Text("Account",
-                        style: TextStyle(color: MCColors.grey, fontSize: 12)))
-              ]),
+              _buildNavItem(context, 'Map', 'assets/images/tab_map.svg', MCColors.grey, () {}),
+              _buildNavItem(context, 'Charge', 'assets/images/tab_charge.svg', MCColors.green, () {}),
+              _buildNavItem(context, 'Community', 'assets/images/tab_community.svg', MCColors.grey, () {}),
+              _buildNavItem(context, 'Account', 'assets/images/tab_account.svg', MCColors.grey, () {
+                NavigatorMain.navStack.push(NavStackRecord(this, context));
+                Navigator.of(context).push(
+                  MCUI.getSlideAnimationRouteBuilder(AccountV()),
+                );
+              }),
             ],
           ),
         ));
   }
 }
-
