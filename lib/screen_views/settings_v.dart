@@ -128,7 +128,7 @@ class _SettingsVState extends State<SettingsV> {
     List<Widget> result = [
       Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         SizedBox(width: MCUI.adjustedWidthWithCotext(64, context)),
-        Container(
+        SizedBox(
             width: 20,
             child: Radio<String>(
               fillColor: WidgetStateProperty.resolveWith<Color>(
@@ -736,6 +736,7 @@ class _SettingsVState extends State<SettingsV> {
                                               )),
                                             );
                                           }
+                                          return null;
                                         });
                                   }),
                                 )),

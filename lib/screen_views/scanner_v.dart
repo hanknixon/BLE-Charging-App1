@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-
 import '../utils/ui.dart';
 import '../utils/colors.dart';
 import '../main.dart';
 import '../navigation/navigation.dart';
 import 'connect_v.dart';
+import 'dart:typed_data';
 
 class ScannerV extends StatefulWidget implements PopTargetWidget {
   @override
@@ -48,6 +48,36 @@ class _ScannerVState extends State<ScannerV> {
   // Test QR code data
   final String testQRData = "44B7D0239A32 1234 EVSE_BLE";
 
+  void handleSuccessfulScan(BuildContext context, ScanSettings scanSettings) {
+    // Create a fake capture for the test QR code
+    final fakeBarcode = Barcode(
+      rawValue: testQRData,
+      displayValue: testQRData,
+      format: BarcodeFormat.qrCode,
+    );
+    
+    final fakeCapture = BarcodeCapture(
+      barcodes: [fakeBarcode],
+      image: null,
+      raw: Uint8List.fromList([]),
+    );
+
+    scanSettings.setCapture(fakeCapture);
+    scanSettings.scanQROpened();
+    
+    ScannerV.stopScanner();
+    
+    NavigatorMain.navStack.push(NavStackRecord(widget, context));
+    Future.delayed(const Duration(milliseconds: MCUI.backBtnDisplayDelayMilSec))
+        .then((val) {
+      backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
+    });
+    
+    Navigator.of(context).push(
+      MCUI.getSlideAnimationRouteBuilder(ConnectV()),
+    );
+  }
+
   Widget cameraView() {
     var scanSettings = context.watch<ScanSettings>();
 
@@ -61,21 +91,7 @@ class _ScannerVState extends State<ScannerV> {
             startDelay: false,
             controller: ScannerV.scanner,
             onDetect: (capture) {
-              if (NavigatorMain.navStack.peek.backWidget != widget) {
-                NavigatorMain.navStack.push(NavStackRecord(widget, context));
-                Future.delayed(const Duration(milliseconds: MCUI.backBtnDisplayDelayMilSec))
-                    .then((val) {
-                  backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
-                });
-                ScannerV.stopScanner();
-                Navigator.of(context).push(
-                  MCUI.getSlideAnimationRouteBuilder(ConnectV()),
-                );
-                setState(() {
-                  scanSettings.setCapture(capture);
-                  scanSettings.scanQROpened();
-                });
-              }
+              handleSuccessfulScan(context, scanSettings);
             },
           ),
         ),
@@ -112,6 +128,21 @@ class _ScannerVState extends State<ScannerV> {
                   version: QrVersions.auto,
                   size: 200.0,
                   backgroundColor: Colors.white,
+                ),
+                SizedBox(height: 20),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: MCColors.white,
+                    side: BorderSide(color: MCColors.green),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => handleSuccessfulScan(context, scanSettings),
+                  child: Text(
+                    'Simulate QR Scan',
+                    style: TextStyle(color: MCColors.green),
+                  ),
                 ),
               ],
             ),

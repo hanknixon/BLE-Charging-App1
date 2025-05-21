@@ -1,9 +1,7 @@
 // ignore_for_file: constant_identifier_names
 //import 'dart:ffi';
-import 'dart:typed_data';
 
 import 'package:ble_app/ble.dart';
-import 'package:ble_app/main.dart';
 import 'package:flutter/material.dart';
 // import 'ble.dart';
 // import 'main.dart';
@@ -13,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:binary/binary.dart';
 import 'dart:async';
 
-import 'package:number_system/number_system.dart';
 
 enum ChargePointStateENUM {
   CHARGE_POINT_IDLE,

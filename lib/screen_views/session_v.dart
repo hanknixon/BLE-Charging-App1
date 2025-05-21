@@ -275,7 +275,7 @@ class _SessionVState extends State<SessionV>
                             height: 66,
                             child:
                                 Image.asset('assets/images/battery_empty.png')),
-                        Container(
+                        SizedBox(
                           width: 137,
                           height: 65,
                           child: Padding(
