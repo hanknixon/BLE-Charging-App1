@@ -15,9 +15,9 @@ import '../ble.dart';
 import '../blemessages.dart';
 import 'scanner_v.dart';
 
-// ignore: must_be_immutable
 class ConnectV extends StatefulWidget implements PoppingWidget {
   late BluetoothDevice device;
+  BluetoothCharacteristic? characteristic; // Add characteristic as class member
 
   @override
   State<ConnectV> createState() => ConnectVState();
@@ -30,9 +30,9 @@ class ConnectV extends StatefulWidget implements PoppingWidget {
 
 class ConnectVState extends State<ConnectV> {
   bool showBypassButton = false;
+  bool isConnecting = false;
 
-  Future waitWhile(bool Function() test,
-      [Duration pollInterval = Duration.zero]) {
+  Future waitWhile(bool Function() test, [Duration pollInterval = Duration.zero]) {
     var completer = Completer();
     check() {
       if (test()) {
@@ -41,27 +41,22 @@ class ConnectVState extends State<ConnectV> {
         Timer(pollInterval, check);
       }
     }
-
     check();
     return completer.future;
   }
 
   void proceedToSettings(BuildContext context, ChargeSettings chargeSettings) {
-    MCUI.dismissOverlay();
-    NavigatorMain.navStack.push(NavStackRecord(widget, context));
-    Future.delayed(const Duration(milliseconds: MCUI.backBtnDisplayDelayMilSec))
-        .then((val) {
-      backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
-    });
-    Navigator.of(context).push(
-      MCUI.getSlideAnimationRouteBuilder(
-        SettingsV(
-          device: widget.device,
-          services: [],
-          bypassMode: true,
+    if (mounted) {
+      Navigator.of(context).push(
+        MCUI.getSlideAnimationRouteBuilder(
+          SettingsV(
+            device: widget.device,
+            services: [],
+            bypassMode: true, // Pass characteristic
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -72,7 +67,6 @@ class ConnectVState extends State<ConnectV> {
 
     widget.device = BluetoothDevice.fromId(scanSettings.btAddress);
     List<BluetoothService> services = [];
-    BluetoothCharacteristic characteristic;
 
     Future<void> messageProtocol(BluetoothCharacteristic characteristic,
         ScanSettings scanSettings) async {
@@ -111,16 +105,14 @@ class ConnectVState extends State<ConnectV> {
       bool state11 =
           await writeScheduleChargeRequestMessage(characteristic, tsdate, 30);
       if (state11 == false) {
-        debugPrint(
-            "\n ***** writeScheduleChargeRequestMessage FAILED ***** \n");
+        debugPrint("\n ***** writeScheduleChargeRequestMessage FAILED ***** \n");
       }
-
-      return;
     }
 
     void showDidNotConnect() {
       setState(() {
         showBypassButton = true;
+        isConnecting = false;
       });
       String msg =
           "Did not connect to device. Please try again and check if Bluetooth is enabled";
@@ -128,12 +120,18 @@ class ConnectVState extends State<ConnectV> {
     }
 
     void connectStartUp() async {
+      setState(() {
+        isConnecting = true;
+      });
+      
       MCUI.showProgressOverlay();
 
       try {
-        await widget.device
-            .disconnect()
-            .timeout(Duration(seconds: MCConstants.bleActionTimeoutSec));
+        if (widget.device.isConnected) {
+          await widget.device
+              .disconnect()
+              .timeout(Duration(seconds: MCConstants.bleActionTimeoutSec));
+        }
       } on Exception catch (e) {
         debugPrint("\nNotify Error $e\n");
         showDidNotConnect();
@@ -143,12 +141,17 @@ class ConnectVState extends State<ConnectV> {
       try {
         await widget.device.connect(autoConnect: false).timeout(
             Duration(seconds: MCConstants.bleActionTimeoutSec), onTimeout: () {
-          debugPrint('Timeout occured');
+          debugPrint('Timeout occurred');
           MCUI.dismissOverlay();
           showDidNotConnect();
         });
+        
         if (Platform.isAndroid) {
-          await widget.device.clearGattCache();
+          try {
+            await widget.device.clearGattCache();
+          } catch (e) {
+            debugPrint("Clear GATT cache error: $e");
+          }
         }
       } on Exception catch (e) {
         debugPrint("\nNotify Error $e\n");
@@ -168,25 +171,28 @@ class ConnectVState extends State<ConnectV> {
 
           services = await widget.device.discoverServices();
 
-          var s, c;
-          for (s in services) {
-            for (c in s.characteristics) {
-              debugPrint("---- ${c.uuid}");
-              if (c.uuid == characteristicsUUID) {
+          BluetoothCharacteristic? foundCharacteristic;
+          for (var service in services) {
+            for (var characteristic in service.characteristics) {
+              if (characteristic.uuid == characteristicsUUID) {
+                foundCharacteristic = characteristic;
                 break;
               }
             }
+            if (foundCharacteristic != null) break;
           }
-          if (c == null) {
+
+          if (foundCharacteristic == null) {
             debugPrint(
                 "\n ------------- Cannot Find Characteristic UUID $characteristicsUUID -------------------\n");
             widget.device.disconnect();
+            showDidNotConnect();
           } else {
-            characteristic = c;
+            widget.characteristic = foundCharacteristic;
 
             try {
-              debugPrint("\n Notify $characteristic \n");
-              await characteristic.setNotifyValue(true);
+              debugPrint("\n Notify ${widget.characteristic} \n");
+              await widget.characteristic!.setNotifyValue(true);
               await widget.device.requestMtu(32);
             } on Exception catch (e) {
               debugPrint("\nNotify Error $e\n");
@@ -199,32 +205,25 @@ class ConnectVState extends State<ConnectV> {
             startCharging = false;
 
             currentChargerState = ChargePointStateENUM.CHARGE_POINT_IDLE;
-            messageProtocol(characteristic, scanSettings);
-
-            debugPrint("${widget.device.runtimeType}");
+            await messageProtocol(widget.characteristic!, scanSettings);
 
             await waitWhile(() => firstDiagnosticRecieved).timeout(
                 Duration(seconds: MCConstants.bleActionTimeoutSec),
                 onTimeout: () {});
 
-            debugPrint(
-                "\n ************* firstDiagnosticRecieved $firstDiagnosticRecieved $currentChargerState************* \n");
-
-            MCUI.dismissOverlay();
-
-            if (context.mounted) {
-              debugPrint(
-                  " ***** Building Device Settings Page  ${currentChargerState.toString()} ***** \n");
-
-              NavigatorMain.navStack.push(NavStackRecord(widget, context));
-              Future.delayed(const Duration(
-                      milliseconds: MCUI.backBtnDisplayDelayMilSec))
-                  .then((val) {
-                backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
+            if (mounted) {
+              MCUI.dismissOverlay();
+              setState(() {
+                isConnecting = false;
               });
-              await Navigator.of(context).push(
+              
+              Navigator.of(context).push(
                 MCUI.getSlideAnimationRouteBuilder(
-                    SettingsV(device: widget.device, services: services)),
+                  SettingsV(
+                    device: widget.device,
+                    services: services,
+                  ),
+                ),
               );
             }
           }
@@ -235,8 +234,6 @@ class ConnectVState extends State<ConnectV> {
               c.cancel();
             }
             connectionSubStream.clear();
-            debugPrint(
-                "\n ******************** DEVICE STATE STREAM CANCELED ${connectionSubStream.length} ********************** \n");
           }
 
           if (chargeSettings.intendedBLEDisconnect) {
@@ -245,7 +242,7 @@ class ConnectVState extends State<ConnectV> {
             }
           } else {
             MCUI.showErrorOverlay(message: "Disconnected", autodismiss: false);
-            if (context.mounted) {
+            if (mounted) {
               TopNavBar.navigateBack(context);
             }
           }
@@ -310,7 +307,6 @@ class ConnectVState extends State<ConnectV> {
                             ),
                           ),
                           onPressed: () {
-                            MCUI.dismissOverlay();
                             widget.device =
                                 BluetoothDevice.fromId("00:00:00:00:00:00");
                             proceedToSettings(context, chargeSettings);
@@ -340,7 +336,7 @@ class ConnectVState extends State<ConnectV> {
                               MCConstants.ctaBtnCornerRadius),
                         ),
                       ),
-                      onPressed: () {
+                      onPressed: isConnecting ? null : () {
                         if (messageSubStream.isNotEmpty) {
                           for (var m in messageSubStream) {
                             m.cancel();
@@ -353,8 +349,6 @@ class ConnectVState extends State<ConnectV> {
                           }
                           connectionSubStream.clear();
                         }
-                        debugPrint(
-                            "\n ******************** STREAM CANCELED DEVICE STATE ${connectionSubStream.length} MESSAGE ${messageSubStream.length} ********************** \n");
 
                         setState(() {
                           showBypassButton = false;
