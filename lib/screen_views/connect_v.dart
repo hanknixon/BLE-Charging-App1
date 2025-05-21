@@ -29,6 +29,8 @@ class ConnectV extends StatefulWidget implements PoppingWidget {
 }
 
 class ConnectVState extends State<ConnectV> {
+  bool showBypassButton = false;
+
   Future waitWhile(bool Function() test,
       [Duration pollInterval = Duration.zero]) {
     var completer = Completer();
@@ -44,32 +46,36 @@ class ConnectVState extends State<ConnectV> {
     return completer.future;
   }
 
+  void proceedToSettings(BuildContext context, ChargeSettings chargeSettings) {
+    MCUI.dismissOverlay();
+    NavigatorMain.navStack.push(NavStackRecord(widget, context));
+    Future.delayed(const Duration(milliseconds: MCUI.backBtnDisplayDelayMilSec))
+        .then((val) {
+      backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
+    });
+    Navigator.of(context).push(
+      MCUI.getSlideAnimationRouteBuilder(
+        SettingsV(
+          device: widget.device,
+          services: [],
+          bypassMode: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    //var theme = Theme.of(context);
     final scanSettings = context.watch<ScanSettings>();
     var chargeSettings = context.watch<ChargeSettings>();
     chargeSettings.chargeSessionStarted = false;
 
-    //BuildContext? dcontext;
-    widget.device = BluetoothDevice.fromId(scanSettings.btAddress //,
-        //name: scanSettings.chargerName,
-        );
+    widget.device = BluetoothDevice.fromId(scanSettings.btAddress);
     List<BluetoothService> services = [];
     BluetoothCharacteristic characteristic;
 
-    //
-    /// Send the intial setup messages to the charge station and start heartbeat timer
-    /// Required messages: Intialization, TimeSync, Setup heartbeat timer to send Dignostic,
-    /// Optional messages: Operator Reg, EV Owner Reg, Schedule Charge
-    ///
-    /// @param {BluetoothCharacteristic} characteristic - The BLE characterisitic to listen to or send a message on
-    ///
-    /// @param {ScanSettings} scanSettings - Settings from the QR code
     Future<void> messageProtocol(BluetoothCharacteristic characteristic,
         ScanSettings scanSettings) async {
-      // await widget.notifyAllServices(services)
-
       await listenMessages(characteristic);
 
       bool state5 = await writeDiagnosticMessage(characteristic);
@@ -92,10 +98,6 @@ class ConnectVState extends State<ConnectV> {
       endHeartbeat = false;
       heartBeatInit(characteristic);
 
-      // await Future.doWhile(() => !firstDiagnosticRecieved);
-
-      //TODO: Remove/Move to proper area, only for testing purposes
-
       bool state8 = await writeOperaotrRegMessage(characteristic);
       if (state8 == false) {
         debugPrint("\n ***** writeOperaotrRegMessage FAILED ***** \n");
@@ -117,16 +119,17 @@ class ConnectVState extends State<ConnectV> {
     }
 
     void showDidNotConnect() {
+      setState(() {
+        showBypassButton = true;
+      });
       String msg =
           "Did not connect to device. Please try again and check if Bluetooth is enabled";
       MCUI.showErrorOverlay(message: msg, autodismiss: false);
     }
 
-    ///App trys to connect to the charge station thorugh BLE and saves the connection stream once connected or removes old streams
     void connectStartUp() async {
       MCUI.showProgressOverlay();
 
-      debugPrint("\n ****** TEST ******* \n");
       try {
         await widget.device
             .disconnect()
@@ -153,6 +156,7 @@ class ConnectVState extends State<ConnectV> {
         showDidNotConnect();
         return;
       }
+
       var stream = widget.device.connectionState.listen((state) async {
         debugPrint(
             "\n ******************** DEVICE STATE STREAM $state ${connectionSubStream.length} ********************** \n");
@@ -164,7 +168,6 @@ class ConnectVState extends State<ConnectV> {
 
           services = await widget.device.discoverServices();
 
-          // ignore: prefer_typing_uninitialized_variables
           var s, c;
           for (s in services) {
             for (c in s.characteristics) {
@@ -210,40 +213,6 @@ class ConnectVState extends State<ConnectV> {
             MCUI.dismissOverlay();
 
             if (context.mounted) {
-              /*switch (currentChargerState) {
-                case ChargePointStateENUM.CHARGE_POINT_CHARGING:
-                  debugPrint(" ***** Building ChargingPage ***** \n");
-
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChargingPage(
-                        device: widget.device,
-                        services: services,
-                        dateTime: chargeSettings.datetime,
-                        settingChoice: chargeSettings.settingsChoice!,
-                        selectedValue: chargeSettings.currentSelectedValue,
-                      ),
-                    ),
-                  );
-                  break;
-                case ChargePointStateENUM.CHARGE_POINT_END_OF_CHARGING:
-                  debugPrint(" ***** Building Charge Summary Page ***** \n");
-                  chargeSettings.endSession();
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChargingPage(
-                        device: widget.device,
-                        services: services,
-                        dateTime: chargeSettings.datetime,
-                        settingChoice: chargeSettings.settingsChoice!,
-                        selectedValue: chargeSettings.currentSelectedValue,
-                      ),
-                    ),
-                  );
-                  break;
-                default:*/
               debugPrint(
                   " ***** Building Device Settings Page  ${currentChargerState.toString()} ***** \n");
 
@@ -257,7 +226,6 @@ class ConnectVState extends State<ConnectV> {
                 MCUI.getSlideAnimationRouteBuilder(
                     SettingsV(device: widget.device, services: services)),
               );
-              //}
             }
           }
         }
@@ -283,13 +251,6 @@ class ConnectVState extends State<ConnectV> {
           }
         }
       });
-
-      /*if (dcontext != null) {
-        if (connectionSubStream.isNotEmpty) {
-          connectionSubStream[0].cancel();
-          connectionSubStream.clear();
-        }
-      }*/
 
       if (connectionSubStream.isEmpty) {
         connectionSubStream.add(stream);
@@ -328,6 +289,40 @@ class ConnectVState extends State<ConnectV> {
                     ),
                   ])),
               Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                if (showBypassButton)
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 16.0),
+                      child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            fixedSize: Size(
+                                MCUI.adjustedWidthWithCotext(305, context),
+                                MCUI.adjustedHeightWithCotext(67, context)),
+                            backgroundColor: MCColors.white,
+                            overlayColor: MCColors.green,
+                            side: BorderSide(
+                              width: 1,
+                              color: MCColors.green,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  MCConstants.ctaBtnCornerRadius),
+                            ),
+                          ),
+                          onPressed: () {
+                            MCUI.dismissOverlay();
+                            widget.device =
+                                BluetoothDevice.fromId("00:00:00:00:00:00");
+                            proceedToSettings(context, chargeSettings);
+                          },
+                          child: Text("Continue Without Connection",
+                              style: TextStyle(
+                                  fontSize: 17,
+                                  letterSpacing: MCConstants.letterSpacing1,
+                                  color: MCColors.green,
+                                  fontWeight: FontWeight.bold))),
+                    ),
+                  ),
                 Center(
                   child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
@@ -361,6 +356,9 @@ class ConnectVState extends State<ConnectV> {
                         debugPrint(
                             "\n ******************** STREAM CANCELED DEVICE STATE ${connectionSubStream.length} MESSAGE ${messageSubStream.length} ********************** \n");
 
+                        setState(() {
+                          showBypassButton = false;
+                        });
                         connectStartUp();
                       },
                       child: Text("Connect",

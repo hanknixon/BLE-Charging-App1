@@ -1,4 +1,3 @@
-
 import 'package:ble_app/navigation/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,36 +16,42 @@ import '../blemessages.dart';
 import '../main.dart';
 import 'session_v.dart';
 
-
 class SettingsV extends StatefulWidget implements PoppingWidget {
-  SettingsV({Key? key, required this.device, required this.services})
+  SettingsV(
+      {Key? key,
+      required this.device,
+      required this.services,
+      this.bypassMode = false})
       : super(key: key);
 
   final BluetoothDevice device;
   final List<BluetoothService> services;
+  final bool bypassMode;
 
   @override
   State<SettingsV> createState() => _SettingsVState();
 
   @override
   void pepareToPop(BuildContext context) async {
-    bool shouldNavigateBack = true;
-    
-    Provider.of<ChargeSettings>(context, listen: false).intendedBLEDisconnect = true;
+    if (!bypassMode) {
+      bool shouldNavigateBack = true;
+      Provider.of<ChargeSettings>(context, listen: false)
+          .intendedBLEDisconnect = true;
 
-    try {
-      await device.disconnect().timeout(
-          Duration(seconds: MCConstants.bleActionTimeoutSec), onTimeout: () {
+      try {
+        await device.disconnect().timeout(
+            Duration(seconds: MCConstants.bleActionTimeoutSec), onTimeout: () {
+          shouldNavigateBack = false;
+        });
+      } on Exception catch (e) {
         shouldNavigateBack = false;
-      });
-    } on Exception catch (e) {
-      shouldNavigateBack = false;
-      debugPrint("\nNotify Error $e\n");
-    }
+        debugPrint("\nNotify Error $e\n");
+      }
 
-    TopNavBar.poppingWidget = this;
-    TopNavBar.poppingWidgetContext = context;
-    TopNavBar.shouldNavigateBack = shouldNavigateBack;
+      TopNavBar.poppingWidget = this;
+      TopNavBar.poppingWidgetContext = context;
+      TopNavBar.shouldNavigateBack = shouldNavigateBack;
+    }
   }
 
   void setSelectedInfo(ChargeSettings chargeSetting) {
@@ -95,7 +100,7 @@ class SettingsV extends StatefulWidget implements PoppingWidget {
                         chargeSetting.maxCapacity) -
                     chargeSetting.startingCharge) /
                 chargeSetting.chargeSpeed) *
-            3.6e+6; //TODO: Change so that it can be any starting percentage and not just 10
+            3.6e+6;
         if (chargeSetting.totalTime < 0 ||
             chargeSetting.currentSelectedValue ==
                 chargeSetting.startingCharge) {
@@ -251,7 +256,6 @@ class _SettingsVState extends State<SettingsV> {
 
     var chargeState = context.watch<ChargeSettings>();
 
-    BluetoothCharacteristic characteristic;
     BuildContext? dcontext;
 
     int timestamp;
@@ -263,7 +267,7 @@ class _SettingsVState extends State<SettingsV> {
     Future<void> showNeedToSwipeAgain(String dispalyText) async {
       return showDialog<void>(
         context: context,
-        barrierDismissible: false, // user must tap button!
+        barrierDismissible: false,
         builder: (BuildContext context) {
           dcontext = context;
           return AlertDialog(
@@ -272,7 +276,9 @@ class _SettingsVState extends State<SettingsV> {
               TextButton(
                 onPressed: () {
                   dcontext = null;
-                  Navigator.pop(context);
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 },
                 child: const Text('Close'),
               ),
@@ -297,7 +303,6 @@ class _SettingsVState extends State<SettingsV> {
       return completer.future;
     }
 
-    // ignore: prefer_typing_uninitialized_variables
     var s, c;
     for (s in widget.services) {
       for (c in s.characteristics) {
@@ -307,9 +312,6 @@ class _SettingsVState extends State<SettingsV> {
       }
     }
 
-    //TODO: Could be null
-    characteristic = c;
-
     chargeState.chargeSessionStarted = true;
 
     return Consumer<ChargeSettings>(
@@ -317,7 +319,6 @@ class _SettingsVState extends State<SettingsV> {
             color: MCColors.white,
             child: SingleChildScrollView(
               child: Stack(
-                  //index: index,
                   alignment: AlignmentDirectional.bottomEnd,
                   clipBehavior: Clip.none,
                   children: <Widget>[
@@ -326,18 +327,20 @@ class _SettingsVState extends State<SettingsV> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                              height: MCUI.adjustedHeightWithCotext(34, context)),
+                              height:
+                                  MCUI.adjustedHeightWithCotext(34, context)),
                           Padding(
                               padding: EdgeInsets.only(
-                                  left:
-                                      MCUI.adjustedWidthWithCotext(64, context)),
+                                  left: MCUI.adjustedWidthWithCotext(
+                                      64, context)),
                               child: Text("Select Charging Type",
                                   style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
                                       color: MCColors.green))),
                           SizedBox(
-                              height: MCUI.adjustedHeightWithCotext(8, context)),
+                              height:
+                                  MCUI.adjustedHeightWithCotext(8, context)),
                           AnimatedContainer(
                               duration: Duration(seconds: 0),
                               curve: Curves.easeInOut,
@@ -371,25 +374,21 @@ class _SettingsVState extends State<SettingsV> {
                                                 value, true, false, false);
                                           },
                                           sliderOnChanged: (double value) {
-                                            chargeSetting.currentSliderValueTime =
-                                                value;
+                                            chargeSetting
+                                                .currentSliderValueTime = value;
                                             ctrlTime.text =
                                                 value.round().toString();
                                             chargeSetting.changeSelection(
                                                 "Max Time", true, false, false);
                                           },
-                                          textOnTap: () {
-                                            /*chargeSetting.currentSliderValueTime =
-                                                0;
-                                            chargeSetting.changeSelection(
-                                                "Max Time", true, false, false);*/
-                                          },
+                                          textOnTap: () {},
                                           textOnSubmitted: (String inputValue) {
                                             if (inputValue.isNotEmpty &&
                                                 (double.parse(inputValue) >=
                                                         0.00 &&
                                                     double.parse(inputValue) <=
-                                                        chargeSetting.maxTime)) {
+                                                        chargeSetting
+                                                            .maxTime)) {
                                               setState(() {
                                                 chargeSetting
                                                         .currentSliderValueTime =
@@ -442,25 +441,21 @@ class _SettingsVState extends State<SettingsV> {
                                                 value, false, true, false);
                                           },
                                           sliderOnChanged: (double value) {
-                                            chargeSetting.currentSliderValueCost =
-                                                value;
+                                            chargeSetting
+                                                .currentSliderValueCost = value;
                                             ctrlCost.text =
                                                 value.round().toString();
                                             chargeSetting.changeSelection(
                                                 "Max Cost", false, true, false);
                                           },
-                                          textOnTap: () {
-                                            /*chargeSetting.currentSliderValueCost =
-                                                0;
-                                            chargeSetting.changeSelection(
-                                                "Max Cost", false, true, false);*/
-                                          },
+                                          textOnTap: () {},
                                           textOnSubmitted: (String inputValue) {
                                             if (inputValue.isNotEmpty &&
                                                 (double.parse(inputValue) >=
                                                         0.00 &&
                                                     double.parse(inputValue) <=
-                                                        chargeSetting.maxCost)) {
+                                                        chargeSetting
+                                                            .maxCost)) {
                                               setState(() {
                                                 chargeSetting
                                                         .currentSliderValueCost =
@@ -521,12 +516,7 @@ class _SettingsVState extends State<SettingsV> {
                                             chargeSetting.changeSelection(
                                                 "Charge %", false, false, true);
                                           },
-                                          textOnTap: () {
-                                            /*chargeSetting
-                                                .currentSliderValuePercent = 0;
-                                            chargeSetting.changeSelection(
-                                                "Charge %", false, false, true);*/
-                                          },
+                                          textOnTap: () {},
                                           textOnSubmitted: (String inputValue) {
                                             if (inputValue.isNotEmpty &&
                                                 (double.parse(inputValue) >=
@@ -557,7 +547,8 @@ class _SettingsVState extends State<SettingsV> {
                           Padding(
                             padding: EdgeInsets.only(
                                 left: MCUI.adjustedWidthWithCotext(44, context),
-                                right: MCUI.adjustedWidthWithCotext(44, context),
+                                right:
+                                    MCUI.adjustedWidthWithCotext(44, context),
                                 bottom:
                                     MCUI.adjustedHeightWithCotext(32, context)),
                             child: AbsorbPointer(
@@ -568,10 +559,10 @@ class _SettingsVState extends State<SettingsV> {
                                   height: slideBtnHeight,
                                   decoration: BoxDecoration(
                                       border: Border.all(
-                                          color:
-                                              chargeSetting.settingsChoice != null
-                                                  ? MCColors.green
-                                                  : MCColors.greyLight),
+                                          color: chargeSetting.settingsChoice !=
+                                                  null
+                                              ? MCColors.green
+                                              : MCColors.greyLight),
                                       borderRadius: BorderRadius.all(
                                           Radius.circular(slideBtnHeight / 2))),
                                   child: Consumer<ChargeSettings>(
@@ -592,11 +583,11 @@ class _SettingsVState extends State<SettingsV> {
                                         label: Text(
                                           "Swipe to Start",
                                           style: TextStyle(
-                                              color:
-                                                  chargeSetting.settingsChoice !=
-                                                          null
-                                                      ? MCColors.green
-                                                      : MCColors.greyLight,
+                                              color: chargeSetting
+                                                          .settingsChoice !=
+                                                      null
+                                                  ? MCColors.green
+                                                  : MCColors.greyLight,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16),
                                         ),
@@ -608,12 +599,31 @@ class _SettingsVState extends State<SettingsV> {
                                           ),
                                         ),
                                         action: () async {
+                                          if (widget.bypassMode) {
+                                            NavigatorMain.navStack.push(
+                                                NavStackRecord(
+                                                    widget, context));
+                                            await Future.delayed(Duration(
+                                                milliseconds:
+                                                    10)); // let UI settle
+                                            Navigator.of(context).push(
+                                              MCUI.getSlideAnimationRouteBuilder(
+                                                SessionV(
+                                                  device: widget.device,
+                                                  services: widget.services,
+                                                  dateTime:
+                                                      chargeState.datetime,
+                                                  settingChoice: chargeSetting
+                                                      .settingsChoice!,
+                                                  selectedValue: chargeState
+                                                      .currentSelectedValue,
+                                                ),
+                                              ),
+                                            );
+                                          }
                                           chargeSetting.startSession();
-                                          //showConnectionOngoing("Wating for Charger to Start");
                                           MCUI.showProgressOverlayWithBackground(
                                               msg: "Charging Starting");
-              
-                                          // String message = widget.buildSettingsMessage(chargeSetting);
                                           setState(() {
                                             index = 2;
                                             startCharging = false;
@@ -621,33 +631,27 @@ class _SettingsVState extends State<SettingsV> {
                                             responseAuthenticationRecieved =
                                                 false;
                                           });
-              
+
                                           try {
-                                            // bool state1 = await widget.writeChargeSettingsMessage(
-                                            //     characteristic, chargeSetting);
-                                            // bool state2 = await widget
-                                            //     .writeStartChargeMessage(characteristic);
-              
-                                            widget.setSelectedInfo(chargeSetting);
                                             widget
-                                                .setRemainingTime(chargeSetting);
-              
+                                                .setSelectedInfo(chargeSetting);
+                                            widget.setRemainingTime(
+                                                chargeSetting);
+
                                             bool state2 =
                                                 await writeAuthenticationMessage(
-                                                    characteristic,
-                                                    chargeSetting);
-                                            if (state2 == false) {
-                                              // await listenMessages(characteristic);
-                                            }
-              
+                                                    c, chargeSetting);
+                                            if (state2 == false) {}
+
                                             await waitWhile(() =>
                                                     responseAuthenticationRecieved)
                                                 .timeout(
                                                     const Duration(seconds: 10),
-                                                    onTimeout: () => setState(() {
+                                                    onTimeout: () =>
+                                                        setState(() {
                                                           index = 0;
-                                                          if (dcontext != null) {
-                                                            //Navigator.pop(dcontext!);
+                                                          if (dcontext !=
+                                                              null) {
                                                             dcontext = null;
                                                           }
                                                           showNeedToSwipeAgain(
@@ -656,11 +660,8 @@ class _SettingsVState extends State<SettingsV> {
                                             if (responseAuthenticationRecieved ==
                                                 true) {
                                               bool state3 =
-                                                  await writeChargingMessage(
-                                                      characteristic);
-                                              if (state3 == true) {
-                                                // await listenMessages(characteristic);
-                                              }
+                                                  await writeChargingMessage(c);
+                                              if (state3 == true) {}
                                             } else {
                                               debugPrint(
                                                   "\n ************* responseAuthenticationRecieved NO RESPONSE ************* \n");
@@ -674,35 +675,32 @@ class _SettingsVState extends State<SettingsV> {
                                                     responseChargingRecieved)
                                                 .timeout(
                                                     const Duration(seconds: 10),
-                                                    onTimeout: () => setState(() {
+                                                    onTimeout: () =>
+                                                        setState(() {
                                                           index = 0;
-                                                          if (dcontext != null) {
-                                                            //Navigator.pop(dcontext!);
+                                                          if (dcontext !=
+                                                              null) {
                                                             dcontext = null;
                                                           }
                                                           showNeedToSwipeAgain(
                                                               "Failed to Start Charge, Please Reswipe");
                                                         }));
-              
+
                                             if (responseChargingRecieved ==
                                                 true) {
                                               if (dcontext != null) {
-                                                //Navigator.pop(dcontext!);
                                                 dcontext = null;
                                               }
                                               debugPrint(
                                                   "\n ************* responseChargingRecieved $dcontext ************* \n");
-              
-                                              //showConnectionOngoing("Waiting on OCPP Messages");
-              
+
                                               await waitWhile(
                                                   () => startCharging);
-              
+
                                               setState(() {
                                                 index = 1;
                                               });
                                               if (dcontext != null) {
-                                                //Navigator.pop(dcontext!);
                                                 dcontext = null;
                                               }
                                               debugPrint(
@@ -712,11 +710,12 @@ class _SettingsVState extends State<SettingsV> {
                                                   "\n ************* responseChargingRecieved NO RESPONSE ************* \n");
                                             }
                                           }
-              
+
                                           if (context.mounted &&
                                               startCharging == true) {
                                             NavigatorMain.navStack.push(
-                                                NavStackRecord(widget, context));
+                                                NavStackRecord(
+                                                    widget, context));
                                             Future.delayed(const Duration(
                                                     milliseconds: MCUI
                                                         .backBtnDisplayDelayMilSec))
@@ -729,8 +728,8 @@ class _SettingsVState extends State<SettingsV> {
                                                 device: widget.device,
                                                 services: widget.services,
                                                 dateTime: chargeState.datetime,
-                                                settingChoice:
-                                                    chargeSetting.settingsChoice!,
+                                                settingChoice: chargeSetting
+                                                    .settingsChoice!,
                                                 selectedValue: chargeSetting
                                                     .currentSelectedValue,
                                               )),
@@ -746,4 +745,3 @@ class _SettingsVState extends State<SettingsV> {
             )));
   }
 }
-
