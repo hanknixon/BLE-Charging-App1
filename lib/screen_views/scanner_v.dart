@@ -1,15 +1,14 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../utils/ui.dart';
 import '../utils/colors.dart';
 import '../main.dart';
 import '../navigation/navigation.dart';
 import 'connect_v.dart';
-
 
 class ScannerV extends StatefulWidget implements PopTargetWidget {
   @override
@@ -26,9 +25,9 @@ class ScannerV extends StatefulWidget implements PopTargetWidget {
 
   static void createScanner() {
     _scanner = MobileScannerController(
-      torchEnabled: true, 
+      torchEnabled: true,
       autoStart: false
-      );
+    );
   }
 
   static void startScanner() {
@@ -46,44 +45,79 @@ class ScannerV extends StatefulWidget implements PopTargetWidget {
 }
 
 class _ScannerVState extends State<ScannerV> {
+  // Test QR code data
+  final String testQRData = "44B7D0239A32 1234 EVSE_BLE";
+
   Widget cameraView() {
     var scanSettings = context.watch<ScanSettings>();
 
-    return Builder(
-      builder: (context) {
-        return RotatedBox(
-          quarterTurns:
-              MediaQuery.of(context).orientation == Orientation.landscape
-                  ? 3
-                  : 0,
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: MobileScanner(
-                startDelay: false,
-                controller: ScannerV.scanner,
-                fit: BoxFit.fitHeight,
-                onDetect: (capture) {
-                  if (NavigatorMain.navStack.peek.backWidget != widget) {
-                    NavigatorMain.navStack
-                        .push(NavStackRecord(widget, context));
-                    Future.delayed(const Duration(
-                            milliseconds: MCUI.backBtnDisplayDelayMilSec))
-                        .then((val) {
-                      backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
-                    });
-                    ScannerV.stopScanner();
-                    Navigator.of(context).push(
-                      MCUI.getSlideAnimationRouteBuilder(ConnectV()),
-                    );
-                    setState(() {
-                      scanSettings.setCapture(capture);
-                      scanSettings.scanQROpened();
-                    });
-                  }
-                },
-              )),
-        );
-      },
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Camera preview
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: MobileScanner(
+            startDelay: false,
+            controller: ScannerV.scanner,
+            onDetect: (capture) {
+              if (NavigatorMain.navStack.peek.backWidget != widget) {
+                NavigatorMain.navStack.push(NavStackRecord(widget, context));
+                Future.delayed(const Duration(milliseconds: MCUI.backBtnDisplayDelayMilSec))
+                    .then((val) {
+                  backBtnVisible.value = NavigatorMain.navStack.isNotEmpty;
+                });
+                ScannerV.stopScanner();
+                Navigator.of(context).push(
+                  MCUI.getSlideAnimationRouteBuilder(ConnectV()),
+                );
+                setState(() {
+                  scanSettings.setCapture(capture);
+                  scanSettings.scanQROpened();
+                });
+              }
+            },
+          ),
+        ),
+        // Test QR code overlay
+        Positioned(
+          top: 50,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Test QR Code',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: MCColors.green,
+                  ),
+                ),
+                SizedBox(height: 10),
+                QrImageView(
+                  data: testQRData,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  backgroundColor: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -130,4 +164,3 @@ class _ScannerVState extends State<ScannerV> {
         ));
   }
 }
-

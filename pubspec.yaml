@@ -26,6 +26,7 @@ dependencies:
   number_system: 0.0.6+8
   binary: 3.0.1
   flutter_svg: ^2.0.17
+  qr_flutter: ^4.0.0
   
 dependency_overrides:
   vibration: ^3.1.3
