@@ -13,8 +13,6 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: 1.0.2
-  here_sdk:
-    path: plugins/heresdk
   flutter_dotenv: ^5.0.2  # For managing API keys securely
   location: ^5.0.0  # For handling device location
   permission_handler: ^11.3.0 

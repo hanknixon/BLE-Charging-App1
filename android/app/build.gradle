@@ -29,11 +29,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        manifestPlaceholders = [
-            HERE_ACCESS_KEY_ID: findProperty('HERE_ACCESS_KEY_ID') ?: System.getenv('HERE_ACCESS_KEY_ID') ?: '',
-            HERE_ACCESS_KEY_SECRET: findProperty('HERE_ACCESS_KEY_SECRET') ?: System.getenv('HERE_ACCESS_KEY_SECRET') ?: ''
-        ]
     }
 
     buildTypes {
