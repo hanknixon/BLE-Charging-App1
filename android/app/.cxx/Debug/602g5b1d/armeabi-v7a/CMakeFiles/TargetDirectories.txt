@@ -1,0 +1,2 @@
+D:/Flutter basics/EV Charging BLE App/src/android/app/.cxx/Debug/602g5b1d/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Flutter basics/EV Charging BLE App/src/android/app/.cxx/Debug/602g5b1d/armeabi-v7a/CMakeFiles/rebuild_cache.dir
