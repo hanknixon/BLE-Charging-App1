@@ -1,27 +1,32 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:here_sdk/core.dart';
 import 'dart:async';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'ble.dart';
 import 'navigation/navigation.dart';
 import 'navigation/navbars.dart';
 import 'utils/colors.dart';
 
-
+/// Characterstics UUID set to Microchip Transparent UART UUID
 Guid characteristicsUUID = Guid(
-    "49535343-1e4d-4bd9-ba61-23c647249616"); // Characterstics UUID set to Microchip Transparent UART UUID
+    "49535343-1e4d-4bd9-ba61-23c647249616");
 
-///Data stream of BLE connection saved
+/// Data stream of BLE connection saved
 List<StreamSubscription> connectionSubStream = [];
 
-///Setup providers for the settings within the app and call the app setup
+/// Setup providers for the settings within the app and call the app setup
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  await dotenv.load(fileName: ".env");
+  
+  // Initialize HERE SDK
+  SdkContext.init(AccessToken('HERE_ACCESS_KEY_ID'));
 
   runApp(
     MultiProvider(
@@ -36,7 +41,7 @@ void main() {
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
-///Setup of themes and colors for the app and call the home page to be built
+/// Setup of themes and colors for the app and call the home page to be built
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
@@ -157,7 +162,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-// Context reference for full screen UI.
+/// Context reference for full screen UI.
 BuildContext? ctxScreen;
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -178,4 +183,3 @@ class _MyHomePageState extends State<MyHomePage> {
         bottomNavigationBar: BottomNavBar());
   }
 }
-

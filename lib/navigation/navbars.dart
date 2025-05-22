@@ -5,6 +5,7 @@ import 'navigation.dart';
 import '../utils/ui.dart';
 import '../utils/colors.dart';
 import '../screen_views/account_v.dart';
+import '../screen_views/maps_v.dart';
 
 class TopNavBar extends StatelessWidget {
   static Widget? poppingWidget;
@@ -138,6 +139,7 @@ class BottomNavBar extends StatelessWidget {
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     final isAccountPage = context.widget is AccountV;
     final isChargePage = currentRoute == '/charge';
+    final isMapsPage = context.widget is MapsV;
 
     return Container(
         height: MCUI.adjustedHeightWithCotext(100, context),
@@ -163,29 +165,32 @@ class BottomNavBar extends StatelessWidget {
                 'Map', 
                 'assets/images/tab_map.svg',
                 () {
-                  if (isAccountPage) {
-                    Navigator.of(context).pop();
+                  if (!isMapsPage) {
+                    NavigatorMain.navStack.push(NavStackRecord(this, context));
+                    Navigator.of(context).push(
+                      MCUI.getSlideAnimationRouteBuilder(MapsV()),
+                    );
                   }
                 },
-                false
+                isMapsPage
               ),
               _buildNavItem(
                 context, 
                 'Charge', 
                 'assets/images/tab_charge.svg',
                 () {
-                  if (isAccountPage) {
+                  if (isAccountPage || isMapsPage) {
                     Navigator.of(context).pop();
                   }
                 },
-                !isAccountPage && !isChargePage
+                !isAccountPage && !isChargePage && !isMapsPage
               ),
               _buildNavItem(
                 context, 
                 'Community', 
                 'assets/images/tab_community.svg',
                 () {
-                  if (isAccountPage) {
+                  if (isAccountPage || isMapsPage) {
                     Navigator.of(context).pop();
                   }
                 },
