@@ -1,0 +1,62 @@
+group 'com.here.here_sdk'
+version '1.0-SNAPSHOT'
+def thisDir = buildscript.sourceFile.getParent()
+
+buildscript {
+    ext.kotlin_version = '1.5.31'
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        flatDir {
+            dirs "${thisDir}/libs"
+        }
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace "com.here.here_sdk"
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    defaultConfig {
+        minSdk 24
+        compileSdk 35
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Require at least OpenGL ES 2.0 for lite and 3.0 for other variants.
+        if ('explore' == 'lite') {
+            manifestPlaceholders["minSupportedGLESVersion"] = "0x00020000"
+        } else {
+            manifestPlaceholders["minSupportedGLESVersion"] = "0x00030000"
+        }
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation(name: 'heresdk-explore-4.22.3.0.189590.release', ext: 'aar')
+}

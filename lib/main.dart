@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:here_sdk/core.dart';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
+import 'package:here_sdk/core.dart';
 import 'ble.dart';
 import 'navigation/navigation.dart';
 import 'navigation/navbars.dart';
@@ -20,14 +19,20 @@ Guid characteristicsUUID = Guid(
 List<StreamSubscription> connectionSubStream = [];
 
 /// Setup providers for the settings within the app and call the app setup
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  await dotenv.load(fileName: ".env");
   
-  // Initialize HERE SDK
-  SdkContext.init(AccessToken('HERE_ACCESS_KEY_ID'));
-
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('Error loading .env file: $e');
+  }
+  
+  // HERE SDK will be initialized in MainActivity.kt
+  // No need to initialize here
+  SdkContext.init(IsolateOrigin.main);
   runApp(
     MultiProvider(
       providers: [
@@ -38,6 +43,8 @@ void main() {
     ),
   );
 }
+
+
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
@@ -57,8 +64,6 @@ class MyApp extends StatelessWidget {
       title: 'EV Charging App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // useMaterial3: true,
-        //primarySwatch: myColor,
         fontFamily: "Inter",
       ),
       home: MyHomePage()

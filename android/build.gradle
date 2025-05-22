@@ -1,5 +1,8 @@
 allprojects {
     repositories {
+        flatDir {
+            dirs project(':here_sdk').file('libs') // 👈 Added for HERE SDK AAR
+        }
         google()
         mavenCentral()
     }

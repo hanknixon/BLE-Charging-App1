@@ -23,3 +23,6 @@ plugins {
 }
 
 include ":app"
+include ':here_sdk'
+project(':here_sdk').projectDir = new File(rootProject.projectDir, '../plugins/here_sdk/android')
+
