@@ -9,7 +9,7 @@ class EditProfileV extends StatefulWidget {
 }
 
 class _EditProfileVState extends State<EditProfileV> {
-  final _nameController = TextEditingController(text: "John Doe");
+  final _nameController = TextEditingController(text: "Hank Nixon");
   final _phoneController = TextEditingController(text: "+1 234 567 8900");
   final _emailController = TextEditingController();
 

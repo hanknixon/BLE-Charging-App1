@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../screen_views/community_v.dart';
 import 'navigation.dart';
 import '../utils/ui.dart';
 import '../utils/colors.dart';
@@ -183,7 +183,10 @@ class BottomNavBar extends StatelessWidget {
             }, 1),
             _buildNavItem(
                 context, 'Community', 'assets/images/tab_community.svg', () {
-              // Add community nav if you have it
+              NavigatorMain.navStack.push(NavStackRecord(this, context));
+              Navigator.of(context).push(
+                MCUI.getSlideAnimationRouteBuilder(CommunityV()),
+              );
             }, 2),
             _buildNavItem(context, 'Account', 'assets/images/tab_account.svg',
                 () {
