@@ -7,6 +7,9 @@ import '../utils/colors.dart';
 import '../screen_views/account_v.dart';
 import '../screen_views/maps_v.dart';
 
+final ValueNotifier<int> selectedTabIndex =
+    ValueNotifier<int>(1); // 0 = Map, 1 = Charge, 2 = Community, 3 = Account
+
 class TopNavBar extends StatelessWidget {
   static Widget? poppingWidget;
   static BuildContext? poppingWidgetContext;
@@ -104,114 +107,94 @@ class TopNavBar extends StatelessWidget {
 }
 
 class BottomNavBar extends StatelessWidget {
-  Widget _buildNavItem(BuildContext context, String label, String iconPath, VoidCallback onTap, bool isSelected) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        IconButton(
-          enableFeedback: false,
-          iconSize: 32,
-          alignment: Alignment.bottomCenter,
-          padding: EdgeInsets.all(0),
-          onPressed: onTap,
-          icon: SvgPicture.asset(
-            iconPath,
-            color: isSelected ? MCColors.green : MCColors.grey,
-          ),
-        ),
-        Container(
-          height: 20,
-          alignment: Alignment.topCenter,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? MCColors.green : MCColors.grey,
-              fontSize: 12
+  Widget _buildNavItem(BuildContext context, String label, String iconPath,
+      VoidCallback onTap, int tabIndex) {
+    return ValueListenableBuilder<int>(
+      valueListenable: selectedTabIndex,
+      builder: (context, selectedIndex, _) {
+        final isSelected = selectedIndex == tabIndex;
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            IconButton(
+              enableFeedback: false,
+              iconSize: 32,
+              alignment: Alignment.bottomCenter,
+              padding: EdgeInsets.all(0),
+              onPressed: () {
+                if (!isSelected) {
+                  selectedTabIndex.value = tabIndex;
+                  onTap();
+                }
+              },
+              icon: SvgPicture.asset(
+                iconPath,
+                color: isSelected ? MCColors.green : MCColors.grey,
+              ),
+            ),
+            Container(
+              height: 20,
+              alignment: Alignment.topCenter,
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? MCColors.green : MCColors.grey,
+                  fontSize: 12,
+                ),
+              ),
             )
-          )
-        )
-      ]
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
-    final isAccountPage = context.widget is AccountV;
-    final isChargePage = currentRoute == '/charge';
-    final isMapsPage = context.widget is MapsV;
-
     return Container(
-        height: MCUI.adjustedHeightWithCotext(100, context),
-        decoration: BoxDecoration(
-          color: MCColors.white,
-          boxShadow: [
-            BoxShadow(
-              color: MCColors.grey.withOpacity(0.3),
-              spreadRadius: 0,
-              blurRadius: 20,
-              offset: Offset(0, 0),
-            ),
+      height: MCUI.adjustedHeightWithCotext(100, context),
+      decoration: BoxDecoration(
+        color: MCColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: MCColors.grey.withOpacity(0.3),
+            spreadRadius: 0,
+            blurRadius: 20,
+            offset: Offset(0, 0),
+          ),
+        ],
+      ),
+      alignment: Alignment.topCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(context, 'Map', 'assets/images/tab_map.svg', () {
+              NavigatorMain.navStack.push(NavStackRecord(this, context));
+              Navigator.of(context).push(
+                MCUI.getSlideAnimationRouteBuilder(MapsV()),
+              );
+            }, 0),
+            _buildNavItem(context, 'Charge', 'assets/images/tab_charge.svg',
+                () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }, 1),
+            _buildNavItem(
+                context, 'Community', 'assets/images/tab_community.svg', () {
+              // Add community nav if you have it
+            }, 2),
+            _buildNavItem(context, 'Account', 'assets/images/tab_account.svg',
+                () {
+              NavigatorMain.navStack.push(NavStackRecord(this, context));
+              Navigator.of(context).push(
+                MCUI.getSlideAnimationRouteBuilder(AccountV()),
+              );
+            }, 3),
           ],
         ),
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                context, 
-                'Map', 
-                'assets/images/tab_map.svg',
-                () {
-                  if (!isMapsPage) {
-                    NavigatorMain.navStack.push(NavStackRecord(this, context));
-                    Navigator.of(context).push(
-                      MCUI.getSlideAnimationRouteBuilder(MapsV()),
-                    );
-                  }
-                },
-                isMapsPage
-              ),
-              _buildNavItem(
-                context, 
-                'Charge', 
-                'assets/images/tab_charge.svg',
-                () {
-                  if (isAccountPage || isMapsPage) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                !isAccountPage && !isChargePage && !isMapsPage
-              ),
-              _buildNavItem(
-                context, 
-                'Community', 
-                'assets/images/tab_community.svg',
-                () {
-                  if (isAccountPage || isMapsPage) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                false
-              ),
-              _buildNavItem(
-                context, 
-                'Account', 
-                'assets/images/tab_account.svg',
-                () {
-                  if (!isAccountPage) {
-                    NavigatorMain.navStack.push(NavStackRecord(this, context));
-                    Navigator.of(context).push(
-                      MCUI.getSlideAnimationRouteBuilder(AccountV()),
-                    );
-                  }
-                },
-                isAccountPage
-              ),
-            ],
-          ),
-        ));
+      ),
+    );
   }
 }

@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:percent_indicator/percent_indicator.dart';
-
 import '../navigation/navigation.dart';
 import '../utils/ui.dart';
 import '../utils/colors.dart';
@@ -54,7 +52,8 @@ class SessionV extends StatefulWidget {
   State<SessionV> createState() => _SessionVState();
 }
 
-class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin {
+class _SessionVState extends State<SessionV>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation _animation;
 
@@ -76,7 +75,8 @@ class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  Future waitWhile(bool Function() test, [Duration pollInterval = Duration.zero]) {
+  Future waitWhile(bool Function() test,
+      [Duration pollInterval = Duration.zero]) {
     var completer = Completer();
     check() {
       if (test()) {
@@ -85,6 +85,7 @@ class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin
         Timer(pollInterval, check);
       }
     }
+
     check();
     return completer.future;
   }
@@ -152,7 +153,8 @@ class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin
       if (remainingMilliseconds < 0) {
         remainingMilliseconds = 0;
       }
-      Duration remainingDuration = Duration(milliseconds: remainingMilliseconds);
+      Duration remainingDuration =
+          Duration(milliseconds: remainingMilliseconds);
       return formatDuration(remainingDuration);
     }
 
@@ -250,7 +252,8 @@ class _SessionVState extends State<SessionV> with SingleTickerProviderStateMixin
                           height: 65,
                           child: Padding(
                             padding: EdgeInsets.only(
-                                right: MCUI.adjustedWidthWithCotext(0, context)),
+                                right:
+                                    MCUI.adjustedWidthWithCotext(0, context)),
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: ClipRect(

@@ -12,8 +12,7 @@ import 'navigation/navbars.dart';
 import 'utils/colors.dart';
 
 /// Characterstics UUID set to Microchip Transparent UART UUID
-Guid characteristicsUUID = Guid(
-    "49535343-1e4d-4bd9-ba61-23c647249616");
+Guid characteristicsUUID = Guid("49535343-1e4d-4bd9-ba61-23c647249616");
 
 /// Data stream of BLE connection saved
 List<StreamSubscription> connectionSubStream = [];
@@ -22,14 +21,14 @@ List<StreamSubscription> connectionSubStream = [];
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  
+
   // Load environment variables
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print('Error loading .env file: $e');
   }
-  
+
   // HERE SDK will be initialized in MainActivity.kt
   // No need to initialize here
   SdkContext.init(IsolateOrigin.main);
@@ -43,8 +42,6 @@ void main() async {
     ),
   );
 }
-
-
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
@@ -60,14 +57,12 @@ class MyApp extends StatelessWidget {
     ]);
 
     return MaterialApp(
-      // TODO: Add App icon and change name of app
-      title: 'EV Charging App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: "Inter",
-      ),
-      home: MyHomePage()
-    );
+        title: 'EV Charging App',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: "Inter",
+        ),
+        home: MyHomePage());
   }
 }
 
@@ -162,7 +157,7 @@ class ScanSettings extends ChangeNotifier {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({super.key});
-  
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }

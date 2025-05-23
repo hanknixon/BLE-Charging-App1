@@ -5,7 +5,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:typed_data';
 import '../navigation/navbars.dart';
 import '../utils/colors.dart';
-import '../utils/constants.dart';
 
 class MapsV extends StatefulWidget {
   @override
@@ -28,10 +27,10 @@ class _MapsVState extends State<MapsV> {
   Future<void> _initializeMap() async {
     try {
       await _requestPermissions();
-      
+
       // Wait longer for SDK to be ready since it's initialized in MainActivity
       await Future.delayed(Duration(milliseconds: 3000));
-      
+
       if (mounted) {
         setState(() {
           _sdkInitialized = true;
@@ -48,15 +47,15 @@ class _MapsVState extends State<MapsV> {
     }
   }
 
-  bool _checkSDKInitialization() {
-    try {
-      // For HERE SDK 4.x, we can check if the context is available
-      return true; // Simplified check since we're handling initialization in main.dart
-    } catch (e) {
-      print('SDK not initialized: $e');
-      return false;
-    }
-  }
+  // bool _checkSDKInitialization() {
+  //   try {
+  //     // For HERE SDK 4.x, we can check if the context is available
+  //     return true; // Simplified check since we're handling initialization in main.dart
+  //   } catch (e) {
+  //     print('SDK not initialized: $e');
+  //     return false;
+  //   }
+  // }
 
   Future<void> _requestPermissions() async {
     // Request location permissions
@@ -75,7 +74,7 @@ class _MapsVState extends State<MapsV> {
     try {
       _mapController = controller;
       print('Map controller created successfully');
-      
+
       // Load map scene first, then set camera position
       _loadMapScene();
     } catch (e) {
@@ -88,32 +87,31 @@ class _MapsVState extends State<MapsV> {
 
   void _loadMapScene() {
     try {
-      _mapController?.mapScene.loadSceneForMapScheme(
-        MapScheme.normalDay, 
-        (MapError? error) {
-          if (error != null) {
-            print('Error loading map scene: ${error.toString()}');
-            String errorMsg = 'Failed to load map scene: ${error.toString()}';
-            
-            // Check for specific authentication errors
-            if (error.toString().contains('Authentication') || 
-                error.toString().contains('Authorization') ||
-                error.toString().contains('Forbidden')) {
-              errorMsg = 'Authentication failed. Please check your HERE API key.\n\nMake sure:\n1. Your API key is valid\n2. Your API key has Map Rendering API enabled\n3. Your API key is correctly set in gradle.properties';
-            }
-            
-            setState(() {
-              _errorMessage = errorMsg;
-            });
-          } else {
-            print('Map scene loaded successfully');
-            // Set camera position after scene is loaded
-            Future.delayed(Duration(milliseconds: 500), () {
-              _setCameraPosition();
-            });
+      _mapController?.mapScene.loadSceneForMapScheme(MapScheme.normalDay,
+          (MapError? error) {
+        if (error != null) {
+          print('Error loading map scene: ${error.toString()}');
+          String errorMsg = 'Failed to load map scene: ${error.toString()}';
+
+          // Check for specific authentication errors
+          if (error.toString().contains('Authentication') ||
+              error.toString().contains('Authorization') ||
+              error.toString().contains('Forbidden')) {
+            errorMsg =
+                'Authentication failed. Please check your HERE API key.\n\nMake sure:\n1. Your API key is valid\n2. Your API key has Map Rendering API enabled\n3. Your API key is correctly set in gradle.properties';
           }
+
+          setState(() {
+            _errorMessage = errorMsg;
+          });
+        } else {
+          print('Map scene loaded successfully');
+          // Set camera position after scene is loaded
+          Future.delayed(Duration(milliseconds: 500), () {
+            _setCameraPosition();
+          });
         }
-      );
+      });
     } catch (e) {
       print('Error in _loadMapScene: $e');
       setState(() {
@@ -130,12 +128,14 @@ class _MapsVState extends State<MapsV> {
 
     try {
       final target = GeoCoordinates(37.7749, -122.4194);
-      
+
       // Use lookAtPoint method to set camera position
       _mapController!.camera.lookAtPoint(target);
-      _mapController!.camera.setDistanceToTarget(1000.0); // 1km distance as double
-      _mapController!.camera.setOrientationAtTarget(GeoOrientationUpdate(0.0, 0.0)); // bearing and tilt
-      
+      _mapController!.camera
+          .setDistanceToTarget(1000.0); // 1km distance as double
+      _mapController!.camera.setOrientationAtTarget(
+          GeoOrientationUpdate(0.0, 0.0)); // bearing and tilt
+
       print('Camera position set to San Francisco successfully');
     } catch (e) {
       print('Error setting camera position: $e');
@@ -154,15 +154,17 @@ class _MapsVState extends State<MapsV> {
       // For demonstration, using a mock location near San Francisco
       // In a real app, you would get actual user location using geolocator package
       final userLocation = GeoCoordinates(37.7849, -122.4094);
-      
+
       // Move camera to user location
       _mapController?.camera.lookAtPoint(userLocation);
-      _mapController?.camera.setDistanceToTarget(500.0); // 500m distance for closer view
-      _mapController?.camera.setOrientationAtTarget(GeoOrientationUpdate(0.0, 0.0)); // bearing and tilt
+      _mapController?.camera
+          .setDistanceToTarget(500.0); // 500m distance for closer view
+      _mapController?.camera.setOrientationAtTarget(
+          GeoOrientationUpdate(0.0, 0.0)); // bearing and tilt
 
       // Add or update user location marker
       _addUserLocationMarker(userLocation);
-      
+
       print('Moved to user location');
     } catch (e) {
       print('Error getting user location: $e');
@@ -186,7 +188,7 @@ class _MapsVState extends State<MapsV> {
 
       _userLocationMarker = MapMarker(coordinates, mapImage);
       _mapController!.mapScene.addMapMarker(_userLocationMarker!);
-      
+
       print('User location marker added');
     } catch (e) {
       print('Error adding user location marker: $e');
@@ -204,7 +206,8 @@ class _MapsVState extends State<MapsV> {
       0x49, 0x48, 0x44, 0x52, // "IHDR"
       0x00, 0x00, 0x00, 0x10, // width: 16
       0x00, 0x00, 0x00, 0x10, // height: 16
-      0x08, 0x06, 0x00, 0x00, 0x00, // bit depth, color type, compression, filter, interlace
+      0x08, 0x06, 0x00, 0x00,
+      0x00, // bit depth, color type, compression, filter, interlace
       0x1F, 0xF3, 0xFF, 0x61, // CRC
       // IDAT chunk (minimal data for transparency)
       0x00, 0x00, 0x00, 0x0A,
@@ -214,7 +217,7 @@ class _MapsVState extends State<MapsV> {
       // IEND chunk
       0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
     ];
-    
+
     return Uint8List.fromList(pngData);
   }
 
@@ -309,7 +312,7 @@ class _MapsVState extends State<MapsV> {
                     HereMap(
                       onMapCreated: _onMapCreated,
                     ),
-                  
+
                   // Show location button only if map is ready and no error
                   if (_mapReady && _sdkInitialized && _errorMessage == null)
                     Positioned(

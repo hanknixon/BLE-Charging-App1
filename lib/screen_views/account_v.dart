@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../utils/ui.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../navigation/navbars.dart';
+import 'edit_profile_v.dart';
+import 'vehicles_v.dart';
+import 'charging_history_v.dart';
 
 class AccountV extends StatelessWidget {
   @override
@@ -52,7 +53,8 @@ class AccountV extends StatelessWidget {
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: MCColors.greenLight,
-                        borderRadius: BorderRadius.circular(MCConstants.ctaBtnCornerRadius),
+                        borderRadius: BorderRadius.circular(
+                            MCConstants.ctaBtnCornerRadius),
                       ),
                       child: Row(
                         children: [
@@ -78,7 +80,13 @@ class AccountV extends StatelessWidget {
                                 ),
                                 SizedBox(height: 16),
                                 OutlinedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => EditProfileV()),
+                                    );
+                                  },
                                   style: OutlinedButton.styleFrom(
                                     side: BorderSide(color: MCColors.green),
                                     shape: RoundedRectangleBorder(
@@ -95,7 +103,11 @@ class AccountV extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Handle profile picture change
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => EditProfileV()),
+                              );
                             },
                             child: Stack(
                               children: [
@@ -131,37 +143,56 @@ class AccountV extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         border: Border.all(color: MCColors.greyLight),
-                        borderRadius: BorderRadius.circular(MCConstants.ctaBtnCornerRadius),
+                        borderRadius: BorderRadius.circular(
+                            MCConstants.ctaBtnCornerRadius),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildStatItem(context, "0", "Total\nSessions", Icons.ev_station),
-                          _buildStatItem(context, "\$0", "Amount\nSpent", Icons.attach_money),
-                          _buildStatItem(context, "0 kWh", "Energy\nUsed", Icons.bolt),
+                          _buildStatItem(context, "0", "Total\nSessions",
+                              Icons.ev_station),
+                          _buildStatItem(context, "\$0", "Amount\nSpent",
+                              Icons.attach_money),
+                          _buildStatItem(
+                              context, "0 kWh", "Energy\nUsed", Icons.bolt),
                         ],
                       ),
                     ),
                   ),
-                  
                   SizedBox(height: 16),
-                  
-                  // Menu Items
-                  _buildMenuItem(context, "My Vehicles", Icons.directions_car_filled),
-                  _buildMenuItem(context, "Charging History", Icons.history),
+                  _buildMenuItem(
+                    context,
+                    "My Vehicles",
+                    Icons.directions_car_filled,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => VehiclesV()),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    context,
+                    "Charging History",
+                    Icons.history,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChargingHistoryV()),
+                      );
+                    },
+                  ),
                   _buildMenuItem(context, "Payment Methods", Icons.payment),
                   _buildMenuItem(context, "Settings", Icons.settings),
                   _buildMenuItem(context, "Help & Support", Icons.help_outline),
                   _buildMenuItem(context, "About", Icons.info_outline),
-                  
-                  // Version Info
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     alignment: Alignment.center,
@@ -198,7 +229,8 @@ class AccountV extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String value, String label, IconData icon) {
+  Widget _buildStatItem(
+      BuildContext context, String value, String label, IconData icon) {
     return Column(
       children: [
         Icon(
@@ -227,9 +259,10 @@ class AccountV extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, String title, IconData icon) {
+  Widget _buildMenuItem(BuildContext context, String title, IconData icon,
+      {VoidCallback? onTap}) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(

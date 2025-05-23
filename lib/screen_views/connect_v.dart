@@ -32,7 +32,8 @@ class ConnectVState extends State<ConnectV> {
   bool showBypassButton = false;
   bool isConnecting = false;
 
-  Future waitWhile(bool Function() test, [Duration pollInterval = Duration.zero]) {
+  Future waitWhile(bool Function() test,
+      [Duration pollInterval = Duration.zero]) {
     var completer = Completer();
     check() {
       if (test()) {
@@ -41,6 +42,7 @@ class ConnectVState extends State<ConnectV> {
         Timer(pollInterval, check);
       }
     }
+
     check();
     return completer.future;
   }
@@ -105,7 +107,8 @@ class ConnectVState extends State<ConnectV> {
       bool state11 =
           await writeScheduleChargeRequestMessage(characteristic, tsdate, 30);
       if (state11 == false) {
-        debugPrint("\n ***** writeScheduleChargeRequestMessage FAILED ***** \n");
+        debugPrint(
+            "\n ***** writeScheduleChargeRequestMessage FAILED ***** \n");
       }
     }
 
@@ -123,7 +126,7 @@ class ConnectVState extends State<ConnectV> {
       setState(() {
         isConnecting = true;
       });
-      
+
       MCUI.showProgressOverlay();
 
       try {
@@ -145,7 +148,7 @@ class ConnectVState extends State<ConnectV> {
           MCUI.dismissOverlay();
           showDidNotConnect();
         });
-        
+
         if (Platform.isAndroid) {
           try {
             await widget.device.clearGattCache();
@@ -216,7 +219,7 @@ class ConnectVState extends State<ConnectV> {
               setState(() {
                 isConnecting = false;
               });
-              
+
               Navigator.of(context).push(
                 MCUI.getSlideAnimationRouteBuilder(
                   SettingsV(
@@ -336,25 +339,27 @@ class ConnectVState extends State<ConnectV> {
                               MCConstants.ctaBtnCornerRadius),
                         ),
                       ),
-                      onPressed: isConnecting ? null : () {
-                        if (messageSubStream.isNotEmpty) {
-                          for (var m in messageSubStream) {
-                            m.cancel();
-                          }
-                          messageSubStream.clear();
-                        }
-                        if (connectionSubStream.isNotEmpty) {
-                          for (var c in connectionSubStream) {
-                            c.cancel();
-                          }
-                          connectionSubStream.clear();
-                        }
+                      onPressed: isConnecting
+                          ? null
+                          : () {
+                              if (messageSubStream.isNotEmpty) {
+                                for (var m in messageSubStream) {
+                                  m.cancel();
+                                }
+                                messageSubStream.clear();
+                              }
+                              if (connectionSubStream.isNotEmpty) {
+                                for (var c in connectionSubStream) {
+                                  c.cancel();
+                                }
+                                connectionSubStream.clear();
+                              }
 
-                        setState(() {
-                          showBypassButton = false;
-                        });
-                        connectStartUp();
-                      },
+                              setState(() {
+                                showBypassButton = false;
+                              });
+                              connectStartUp();
+                            },
                       child: Text("Connect",
                           style: TextStyle(
                               fontSize: 17,
