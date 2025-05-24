@@ -5,6 +5,8 @@ import '../navigation/navbars.dart';
 import 'edit_profile_v.dart';
 import 'vehicles_v.dart';
 import 'charging_history_v.dart';
+import 'payment_methods_v.dart';
+import 'account_settings_v.dart';
 
 class AccountV extends StatelessWidget {
   @override
@@ -189,8 +191,29 @@ class AccountV extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildMenuItem(context, "Payment Methods", Icons.payment),
-                  _buildMenuItem(context, "Settings", Icons.settings),
+                  _buildMenuItem(
+                    context,
+                    "Payment Methods",
+                    Icons.payment,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PaymentMethodsV()),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    context,
+                    "Settings",
+                    Icons.settings,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AppSettingsV()),
+                      );
+                    },
+                  ),
                   _buildMenuItem(context, "Help & Support", Icons.help_outline),
                   _buildMenuItem(context, "About", Icons.info_outline),
                   Container(
