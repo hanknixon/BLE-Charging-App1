@@ -1,0 +1,2 @@
+D:/Flutter basics/EV Charging BLE App - Copy Backup/src/android/app/.cxx/RelWithDebInfo/3d4y2c2m/x86/CMakeFiles/edit_cache.dir
+D:/Flutter basics/EV Charging BLE App - Copy Backup/src/android/app/.cxx/RelWithDebInfo/3d4y2c2m/x86/CMakeFiles/rebuild_cache.dir

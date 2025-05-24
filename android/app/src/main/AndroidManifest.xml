@@ -24,16 +24,12 @@
 
     <application
         android:label="EV Charging App"
-        android:icon="@mipmap/ic_launcher">
-
-        <!-- HERE SDK Configuration with API Key -->
-        <meta-data
-            android:name="com.here.sdk.access_key_id"
-            android:value="c2HLPeyGgNX00FV0s44ILQ" />
-        <meta-data
-            android:name="com.here.sdk.access_key_secret"
-            android:value="NMK3bA0k4iaZl6nerSEujEMb3Q-K-ayuJP9GO1Z5FzweC6Z-SVIHSa4s0m06IIygTULiqT8iuZNJ6rX3DXIPEg" />
-
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="false">
+    
+        <meta-data android:name="flutter.embedding.android.EnableVulkan" android:value="false"/>
 
         <activity
             android:name=".MainActivity"
