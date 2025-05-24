@@ -231,124 +231,144 @@ class _SessionVState extends State<SessionV>
         bool currentlyCharging) {
       return Scaffold(
         backgroundColor: MCColors.white,
-        body: Stack(
+        body: SafeArea(
+          child: Stack(
             alignment: AlignmentDirectional.bottomCenter,
             clipBehavior: Clip.none,
             children: [
-              Column(
-                children: [
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(17, context)),
-                  Stack(
-                      alignment: AlignmentDirectional.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        SizedBox(
-                            width: 138,
-                            height: 66,
-                            child:
-                                Image.asset('assets/images/battery_empty.png')),
-                        SizedBox(
-                          width: 137,
-                          height: 65,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                right:
-                                    MCUI.adjustedWidthWithCotext(0, context)),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: ClipRect(
+              SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 100),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(17, context)),
+                      Stack(
+                          alignment: AlignmentDirectional.center,
+                          clipBehavior: Clip.none,
+                          children: [
+                            SizedBox(
+                                width: 138,
+                                height: 66,
+                                child: Image.asset(
+                                    'assets/images/battery_empty.png')),
+                            SizedBox(
+                              width: 137,
+                              height: 65,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    right: MCUI.adjustedWidthWithCotext(
+                                        0, context)),
                                 child: Align(
                                   alignment: Alignment.centerLeft,
-                                  widthFactor: chargeState.currentCharge /
-                                      chargeState.maxCapacity,
-                                  child: Image.asset(
-                                    'assets/images/battery_juice.png',
-                                    height: 65,
-                                    fit: BoxFit.cover,
+                                  child: ClipRect(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      widthFactor: chargeState.currentCharge /
+                                          chargeState.maxCapacity,
+                                      child: Image.asset(
+                                        'assets/images/battery_juice.png',
+                                        height: 65,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        SizedBox(
-                            width: 150,
-                            height: 35,
-                            child: Image.asset(
-                                'assets/images/battery_textbox.png')),
-                        Padding(
-                            padding: EdgeInsets.only(
-                                right:
-                                    MCUI.adjustedWidthWithCotext(13, context)),
-                            child: Text(
-                                "${((chargeState.currentCharge / chargeState.maxCapacity) * 100.0).floor()}%",
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: MCColors.green,
-                                    fontWeight: FontWeight.w900))),
-                      ]),
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(30, context)),
-                  listEntry(
-                      widget.settingChoice,
-                      widget.settingChoice == "Max Time"
-                          ? "${widget.selectedValue.round().toString()} Minute(s)"
-                          : widget.settingChoice == "Max Cost"
-                              ? "\$${widget.selectedValue.toStringAsFixed(2)}"
-                              : "${widget.selectedValue.round().toString()}%"),
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: MCUI.adjustedWidthWithCotext(64, context),
-                        right: MCUI.adjustedWidthWithCotext(64, context)),
-                    child: Container(
-                        color: MCColors.green,
-                        height: 1,
-                        margin: EdgeInsets.only(
-                            top: MCUI.adjustedHeightWithCotext(8, context),
-                            bottom: MCUI.adjustedHeightWithCotext(8, context))),
+                            SizedBox(
+                                width: 150,
+                                height: 35,
+                                child: Image.asset(
+                                    'assets/images/battery_textbox.png')),
+                            Padding(
+                                padding: EdgeInsets.only(
+                                    right: MCUI.adjustedWidthWithCotext(
+                                        13, context)),
+                                child: Text(
+                                    "${((chargeState.currentCharge / chargeState.maxCapacity) * 100.0).floor()}%",
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: MCColors.green,
+                                        fontWeight: FontWeight.w900))),
+                          ]),
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(30, context)),
+                      listEntry(
+                          widget.settingChoice,
+                          widget.settingChoice == "Max Time"
+                              ? "${widget.selectedValue.round().toString()} Minute(s)"
+                              : widget.settingChoice == "Max Cost"
+                                  ? "\$${widget.selectedValue.toStringAsFixed(2)}"
+                                  : "${widget.selectedValue.round().toString()}%"),
+                      Padding(
+                        padding: EdgeInsets.only(
+                            left: MCUI.adjustedWidthWithCotext(64, context),
+                            right: MCUI.adjustedWidthWithCotext(64, context)),
+                        child: Container(
+                            color: MCColors.green,
+                            height: 1,
+                            margin: EdgeInsets.only(
+                                top: MCUI.adjustedHeightWithCotext(8, context),
+                                bottom:
+                                    MCUI.adjustedHeightWithCotext(8, context))),
+                      ),
+                      listEntry("Price:", "\$${chargeState.chargePrice} / kWh"),
+                      Padding(
+                        padding: EdgeInsets.only(
+                            left: MCUI.adjustedWidthWithCotext(64, context),
+                            right: MCUI.adjustedWidthWithCotext(64, context)),
+                        child: Container(
+                            color: MCColors.green,
+                            height: 1,
+                            margin: EdgeInsets.only(
+                                top: MCUI.adjustedHeightWithCotext(8, context),
+                                bottom:
+                                    MCUI.adjustedHeightWithCotext(8, context))),
+                      ),
+                      listEntry("Total Cost:",
+                          "\$${((chargeState.currentCharge - chargeState.startingCharge) * chargeState.chargePrice).toStringAsFixed(2)}"),
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(16, context)),
+                      cardEntry(
+                          "Output Power",
+                          "${chargeState.chargeSpeed} kW",
+                          SvgPicture.asset(
+                              'assets/images/card_icon_station.svg')),
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(8, context)),
+                      cardEntry(
+                          "Delivered Energy",
+                          "${(currentMeterValue).toStringAsFixed(2)} kWh",
+                          SvgPicture.asset('assets/images/card_icon_ev.svg')),
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(8, context)),
+                      cardEntry(
+                          "Time Elapsed",
+                          formatDuration(chargeState.stopwatch.elapsed),
+                          SvgPicture.asset(
+                              'assets/images/card_icon_time_el.svg')),
+                      SizedBox(
+                          height: MCUI.adjustedHeightWithCotext(8, context)),
+                      cardEntry(
+                          "Time Remaining",
+                          currentlyCharging
+                              ? getRemainingTime(
+                                  chargeState.totalTime.round() + 1000,
+                                  chargeState.stopwatch)
+                              : "0:00:00",
+                          SvgPicture.asset(
+                              'assets/images/card_icon_time_rm.svg')),
+                      SizedBox(height: 20),
+                    ],
                   ),
-                  listEntry("Price:", "\$${chargeState.chargePrice} / kWh"),
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: MCUI.adjustedWidthWithCotext(64, context),
-                        right: MCUI.adjustedWidthWithCotext(64, context)),
-                    child: Container(
-                        color: MCColors.green,
-                        height: 1,
-                        margin: EdgeInsets.only(
-                            top: MCUI.adjustedHeightWithCotext(8, context),
-                            bottom: MCUI.adjustedHeightWithCotext(8, context))),
-                  ),
-                  listEntry("Total Cost:",
-                      "\$${((chargeState.currentCharge - chargeState.startingCharge) * chargeState.chargePrice).toStringAsFixed(2)}"),
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(16, context)),
-                  cardEntry("Output Power", "${chargeState.chargeSpeed} kW",
-                      SvgPicture.asset('assets/images/card_icon_station.svg')),
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(8, context)),
-                  cardEntry(
-                      "Delivered Energy",
-                      "${(currentMeterValue).toStringAsFixed(2)} kWh",
-                      SvgPicture.asset('assets/images/card_icon_ev.svg')),
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(8, context)),
-                  cardEntry(
-                      "Time Elapsed",
-                      formatDuration(chargeState.stopwatch.elapsed),
-                      SvgPicture.asset('assets/images/card_icon_time_el.svg')),
-                  SizedBox(height: MCUI.adjustedHeightWithCotext(8, context)),
-                  cardEntry(
-                      "Time Remaining",
-                      currentlyCharging
-                          ? getRemainingTime(
-                              chargeState.totalTime.round() + 1000,
-                              chargeState.stopwatch)
-                          : "0:00:00",
-                      SvgPicture.asset('assets/images/card_icon_time_rm.svg')),
-                ],
+                ),
               ),
-              SizedBox(height: 16),
-              Padding(
-                padding: EdgeInsets.only(
-                    bottom: MCUI.adjustedWidthWithCotext(24, context)),
+              Positioned(
+                bottom: 24,
+                left: 24,
+                right: 24,
                 child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       fixedSize: Size(
@@ -427,7 +447,9 @@ class _SessionVState extends State<SessionV>
                             color: MCColors.green,
                             fontWeight: FontWeight.bold))),
               ),
-            ]),
+            ],
+          ),
+        ),
       );
     }
 
