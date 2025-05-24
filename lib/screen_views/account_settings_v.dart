@@ -143,6 +143,7 @@ class _AppSettingsVState extends State<AppSettingsV> {
                             color: MCColors.green),
                         title: Text("Dark Mode"),
                         value: _darkMode,
+                        activeColor: MCColors.greenDark,
                         onChanged: (bool value) {
                           setState(() {
                             _darkMode = value;

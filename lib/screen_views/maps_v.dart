@@ -15,160 +15,69 @@ class MapsV extends StatefulWidget {
 class _MapsVState extends State<MapsV> {
   HereMapController? _mapController;
   MapMarker? _userLocationMarker;
-  bool _mapReady = false;
-  bool _sdkInitialized = false;
   String? _errorMessage;
   bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeMap();
+    if (SDKNativeEngine.sharedInstance == null) {
+      print(
+          '❌ HERE SDK not initialized yet! Go back and fix main.dart initialization.');
+    } else {
+      print('✅ HERE SDK already initialized, ready to create map.');
+    }
   }
 
   @override
   void dispose() {
     _isDisposed = true;
-    if (_userLocationMarker != null && _mapController != null) {
-      _mapController!.mapScene.removeMapMarker(_userLocationMarker!);
+    if (_userLocationMarker != null) {
+      _mapController?.mapScene.removeMapMarker(_userLocationMarker!);
     }
     _mapController?.finalize();
     super.dispose();
   }
 
-  Future<void> _initializeMap() async {
-    try {
-      await _requestPermissions();
-
-      if (SDKNativeEngine.sharedInstance == null) {
-        final sdkOptions = SDKOptions.withAccessKeySecret(
-          '848HTu2nccaIgyZr64SS9g',
-          'LXQOIDsXCUvMh_MRx9jU49f0ZlPljijA5BzWJj9I_aJbQ68rEJktVlP6YoQKsMEY3GgmH5G4zRTjrjW1PwKhjg',
-        );
-        SDKNativeEngine.makeSharedInstance(sdkOptions);
-        print('✅ SDKNativeEngine initialized');
-      }
-
-      // ✅ Mark as initialized AFTER SDK engine is created
-      if (!_isDisposed && mounted) {
-        setState(() {
-          _sdkInitialized = true;
-        });
-      }
-    } catch (e) {
-      print('Error in _initializeMap: $e');
-      if (!_isDisposed && mounted) {
-        setState(() {
-          _errorMessage = 'Failed to initialize map: $e';
-        });
-      }
-    }
-  }
-
   Future<void> _requestPermissions() async {
     var status = await Permission.location.request();
-    if (status.isGranted) {
-      print('Location permission granted');
-    } else if (status.isDenied) {
-      print('Location permission denied');
+    if (!status.isGranted) {
       throw Exception('Location permission required');
-    } else if (status.isPermanentlyDenied) {
-      print('Location permission permanently denied');
-      await openAppSettings();
-      throw Exception('Please enable location permissions in settings');
     }
   }
 
   void _onMapCreated(HereMapController controller) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isDisposed && mounted) {
-        _mapController = controller;
-        print('✅ Map controller created');
-        _loadMapScene();
-      }
-    });
-  }
+    _mapController = controller;
+    print('✅ Map controller created');
 
-  void _loadMapScene() {
-    if (_mapController == null || _isDisposed) return;
-
-    try {
-      _mapController!.mapScene.loadSceneForMapScheme(
-        MapScheme.normalDay,
+    _mapController!.mapScene.loadSceneForMapScheme(MapScheme.normalDay,
         (MapError? error) {
-          if (error != null) {
-            print('❌ Error loading map scene: ${error.toString()}');
-            if (!_isDisposed && mounted) {
-              setState(() {
-                _errorMessage = 'Failed to load map scene: ${error.toString()}';
-              });
-            }
-            return;
-          }
-
-          print('✅ Map scene loaded successfully');
-
-          if (_mapController == null) {
-            print('❌ mapController is null at load time');
-            return;
-          }
-
-          final target = GeoCoordinates(37.7749, -122.4194);
-          _mapController!.camera.lookAtPoint(target);
-          _mapController!.camera.setDistanceToTarget(1000.0);
-          _mapController!.camera.setOrientationAtTarget(
-            GeoOrientationUpdate(0.0, 0.0),
-          );
-
-          if (!_isDisposed && mounted) {
-            setState(() {
-              _mapReady = true; // ✅ Only mark ready after successful load
-            });
-          }
-        },
-      );
-    } catch (e) {
-      print('❌ Exception in loadMapScene: $e');
-      if (!_isDisposed && mounted) {
-        setState(() {
-          _errorMessage = 'Failed to load map: $e';
-        });
+      if (error != null) {
+        print('❌ Error loading map scene: $error');
+        if (!_isDisposed && mounted) {
+          setState(() {
+            _errorMessage = 'Failed to load map scene: $error';
+          });
+        }
+        return;
       }
-    }
-  }
 
-  void _setCameraPosition() {
-    if (_mapController == null || _isDisposed) return;
-
-    try {
+      print('✅ Map scene loaded successfully');
       final target = GeoCoordinates(37.7749, -122.4194);
       _mapController!.camera.lookAtPoint(target);
       _mapController!.camera.setDistanceToTarget(1000.0);
       _mapController!.camera
           .setOrientationAtTarget(GeoOrientationUpdate(0.0, 0.0));
-    } catch (e) {
-      print('Error setting camera position: $e');
-    }
+    });
   }
 
   void _moveToUserLocation() async {
-    if (_mapController == null || _isDisposed) return;
-
     try {
-      var status = await Permission.location.status;
-      if (!status.isGranted) {
-        await _requestPermissions();
-        return;
-      }
+      await _requestPermissions();
 
-      // Mock location for demo
       final userLocation = GeoCoordinates(37.7849, -122.4094);
-
-      _mapController!.camera.lookAtPoint(userLocation);
-      _mapController!.camera.setDistanceToTarget(500.0);
-      _mapController!.camera
-          .setOrientationAtTarget(GeoOrientationUpdate(0.0, 0.0));
-
+      _mapController?.camera.lookAtPoint(userLocation);
+      _mapController?.camera.setDistanceToTarget(500.0);
       _addUserLocationMarker(userLocation);
     } catch (e) {
       print('Error getting user location: $e');
@@ -176,27 +85,17 @@ class _MapsVState extends State<MapsV> {
   }
 
   void _addUserLocationMarker(GeoCoordinates coordinates) {
-    if (_mapController == null || _isDisposed) return;
-
-    try {
-      if (_userLocationMarker != null) {
-        _mapController!.mapScene.removeMapMarker(_userLocationMarker!);
-      }
-
-      final mapImage = MapImage.withPixelDataAndImageFormat(
-        _createCircleMarkerPixelData(),
-        ImageFormat.png,
-      );
-
-      _userLocationMarker = MapMarker(coordinates, mapImage);
-      _mapController!.mapScene.addMapMarker(_userLocationMarker!);
-    } catch (e) {
-      print('Error adding user location marker: $e');
+    if (_userLocationMarker != null) {
+      _mapController?.mapScene.removeMapMarker(_userLocationMarker!);
     }
+
+    final mapImage = MapImage.withPixelDataAndImageFormat(
+        _createCircleMarkerPixelData(), ImageFormat.png);
+    _userLocationMarker = MapMarker(coordinates, mapImage);
+    _mapController?.mapScene.addMapMarker(_userLocationMarker!);
   }
 
   Uint8List _createCircleMarkerPixelData() {
-    // Simple blue circle PNG data
     return Uint8List.fromList([
       0x89,
       0x50,
@@ -284,30 +183,22 @@ class _MapsVState extends State<MapsV> {
             child: TopNavBar(),
           ),
           Expanded(
-            child: Builder(
-              builder: (context) {
-                if (_errorMessage != null) {
-                  return Center(
+            child: _errorMessage != null
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.error_outline, size: 64, color: Colors.red),
                         SizedBox(height: 16),
-                        Text(
-                          'Map Error',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Text('Map Error',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
                         SizedBox(height: 8),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            _errorMessage!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red),
-                          ),
+                          child: Text(_errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.red)),
                         ),
                         SizedBox(height: 16),
                         ElevatedButton(
@@ -315,37 +206,18 @@ class _MapsVState extends State<MapsV> {
                             if (!_isDisposed && mounted) {
                               setState(() {
                                 _errorMessage = null;
-                                _mapReady = false;
-                                _sdkInitialized = false;
                               });
-                              _initializeMap();
                             }
                           },
                           child: Text('Retry'),
                         ),
                       ],
                     ),
-                  );
-                } else if (!_sdkInitialized || !_mapReady) {
-                  // Show loading indicator until SDK engine and map scene are ready
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading map...'),
-                      ],
-                    ),
-                  );
-                } else {
-                  // ✅ Only show the HereMap widget once the SDK engine is ready and map scene is loaded!
-                  return Stack(
+                  )
+                : Stack(
                     children: [
                       Positioned.fill(
-                        child: HereMap(
-                          onMapCreated: _onMapCreated,
-                        ),
+                        child: HereMap(onMapCreated: _onMapCreated),
                       ),
                       Positioned(
                         right: 16,
@@ -357,10 +229,7 @@ class _MapsVState extends State<MapsV> {
                         ),
                       ),
                     ],
-                  );
-                }
-              },
-            ),
+                  ),
           ),
         ],
       ),

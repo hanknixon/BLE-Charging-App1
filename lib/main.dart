@@ -6,6 +6,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:here_sdk/core.dart';
+import 'package:here_sdk/core.engine.dart';
 import 'ble.dart';
 import 'navigation/navigation.dart';
 import 'navigation/navbars.dart';
@@ -18,9 +19,11 @@ Guid characteristicsUUID = Guid("49535343-1e4d-4bd9-ba61-23c647249616");
 List<StreamSubscription> connectionSubStream = [];
 
 /// Setup providers for the settings within the app and call the app setup
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // Initialize HERE SDK engine
+  SdkContext.init(IsolateOrigin.main);
 
   // Load environment variables
   try {
@@ -29,9 +32,7 @@ void main() async {
     print('Error loading .env file: $e');
   }
 
-  // HERE SDK will be initialized in MainActivity.kt
-  // No need to initialize here
-  SdkContext.init(IsolateOrigin.main);
+  // Setup providers and run app
   runApp(
     MultiProvider(
       providers: [
@@ -41,6 +42,19 @@ void main() async {
       child: MyApp(),
     ),
   );
+}
+
+Future<void> initializeHereSdk() async {
+  if (SDKNativeEngine.sharedInstance == null) {
+    final sdkOptions = SDKOptions.withAccessKeySecret(
+      '848HTu2nccaIgyZr64SS9g', // ⬅️ Replace with your actual key
+      'LXQOIDsXCUvMh_MRx9jU49f0ZlPljijA5BzWJj9I_aJbQ68rEJktVlP6YoQKsMEY3GgmH5G4zRTjrjW1PwKhjg', // ⬅️ Replace with your actual secret
+    );
+    SDKNativeEngine.makeSharedInstance(sdkOptions);
+    print('✅ HERE SDK Engine initialized');
+  } else {
+    print('✅ HERE SDK Engine already initialized');
+  }
 }
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
