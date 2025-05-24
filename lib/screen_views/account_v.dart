@@ -7,6 +7,7 @@ import 'vehicles_v.dart';
 import 'charging_history_v.dart';
 import 'payment_methods_v.dart';
 import 'account_settings_v.dart';
+import 'help_support_v.dart';
 
 class AccountV extends StatelessWidget {
   @override
@@ -214,7 +215,17 @@ class AccountV extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildMenuItem(context, "Help & Support", Icons.help_outline),
+                  _buildMenuItem(
+                    context,
+                    "Help & Support",
+                    Icons.help_outline,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HelpSupportV()),
+                      );
+                    },
+                  ),
                   _buildMenuItem(context, "About", Icons.info_outline),
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 24),
